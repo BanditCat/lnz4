@@ -67,7 +67,7 @@ clean:
 .PHONY: backup
 backup: clean release
 	git add -A
-	git commit -a -m "$(shell cat ~/lnz3/workingon.txt)" || true
+	git commit -a -m "$(shell cat ~/lnz4/workingon.txt)" || true
 
 .PHONY: depend
 depend:
