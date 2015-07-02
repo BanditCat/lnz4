@@ -1,0 +1,2 @@
+lnz.o: lnz.c lnz.h
+main.o: main.c lnz.h
