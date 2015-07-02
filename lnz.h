@@ -7,7 +7,9 @@
 #ifndef LNZ_H
 #define LNZ_H
 
-#include "limits.h"
+#include <limits.h>
+#include <stdio.h>
+#include <string.h>
 
 // Types.
 typedef unsigned char u8;
@@ -63,6 +65,8 @@ void LNZfree( void* mem );
 #ifdef DEBUG
 u64 LNZmallocCount( void );
 #endif 
+
+#include "nameTable.h"
 
 #endif //LNZ_H 
 

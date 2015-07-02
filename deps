@@ -1,2 +1,3 @@
-lnz.o: lnz.c lnz.h
-main.o: main.c lnz.h
+lnz.o: lnz.c lnz.h nameTable.h
+main.o: main.c lnz.h nameTable.h
+nameTable.o: nameTable.c lnz.h nameTable.h

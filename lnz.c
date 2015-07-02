@@ -6,7 +6,9 @@
 
 #include "lnz.h"
 
+#ifdef DEBUG
 static u64 lnzMallocCount = 0;
+#endif
 
 void LNZdie( const char* msg ){
   MessageBoxA( NULL, (char*)msg, "Exiting LNZ...", 0 );
