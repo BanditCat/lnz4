@@ -46,3 +46,4 @@ u64 LNZmallocCount( void ){
   return lnzMallocCount;
 }
 #endif  
+

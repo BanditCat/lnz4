@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 // Types.
 typedef unsigned char u8;
@@ -82,6 +83,7 @@ u64 LNZmallocCount( void );
 #endif 
 
 #include "nameTable.h"
+#include "parser.h"
 
 #endif //LNZ_H 
 

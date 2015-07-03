@@ -15,15 +15,22 @@ int main( int argc, char** argv ){
   nameTable* nt = newNameTable();
   
   addNameToTable( nt, (u8*)"foo", 3 );
+  addNameToTable( nt, (u8*)"follow", 6 );
   addNameToTable( nt, (u8*)"bar", 3 );
   addNameToTable( nt, (u8*)"fol", 3 );
   addNameToTable( nt, (u8*)"too", 3 );
+  addNameToTable( nt, (u8*)"foo", 3 );
   addNameToTable( nt, (u8*)"fot", 3 );
   addNameToTable( nt, (u8*)"follow", 6 );
   addNameToTable( nt, (u8*)"follower", 8 );
   addNameToTable( nt, (u8*)"following", 9 );
-
-  printNameTable( nt );
+  addNameToTable( nt, (u8*)"foo", 3 );
+  addNameToTable( nt, (u8*)"foo", 3 );
+  
+  for( u64 i = 0; i < 3; ++i ){
+    popNameTable( nt );
+    printNameTable( nt );
+  }
 
 
   printf( "getName( 2 ): %s\n", getName( nt, 2 ) );
@@ -32,6 +39,21 @@ int main( int argc, char** argv ){
   printf( "getIndex( \"follower\", 8 ): %u\n", (unsigned int)getIndex( nt, (u8*)"follower", 8 ) );
 
   deleteNameTable( nt );
+
+
+
+  const char* err;
+  LNZnode* expr;
+
+  const char* code = "  d f   ";
+
+  expr = parseExpression( (const u8*)code, strlen( code ), &err );
+  if( expr == NULL )
+    printf( "%s", err );
+  else printExpression( expr );
+
+
+
 #ifdef DEBUG
   printf( "Malloc count (non-zero is a memory leak): %u\n", (unsigned int)LNZmallocCount() );
 #endif

@@ -1,3 +1,4 @@
-lnz.o: lnz.c lnz.h nameTable.h
-main.o: main.c lnz.h nameTable.h
-nameTable.o: nameTable.c lnz.h nameTable.h
+lnz.o: lnz.c lnz.h nameTable.h parser.h
+main.o: main.c lnz.h nameTable.h parser.h
+nameTable.o: nameTable.c lnz.h nameTable.h parser.h
+parser.o: parser.c lnz.h nameTable.h parser.h
