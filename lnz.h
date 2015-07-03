@@ -69,6 +69,18 @@ typedef struct{
   u64 data;
 } LNZnode;
 
+#include "nameTable.h"
+#include "stack.h"
+
+typedef struct{
+  LNZnode* heap;
+  u32 heapSize;
+  u32 nodeCount;
+  nameTable names;
+
+} LNZprogram;
+
+
 
 void LNZdie( const char* );
 
@@ -82,7 +94,6 @@ void LNZfree( void* mem );
 u64 LNZmallocCount( void );
 #endif 
 
-#include "nameTable.h"
 #include "parser.h"
 
 #endif //LNZ_H 

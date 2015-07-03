@@ -4,8 +4,8 @@
 
 // LNZ parser header.
 
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef LNZ_PARSER_H
+#define LNZ_PARSER_H
 
 // This function returns 1 if c is a whitespace. NUL is considered whitespace. Returns 0 otherwise.
 int isWhitespace( u8 c );
@@ -21,4 +21,4 @@ LNZnode* parseExpression( const u8* string, u64 length, const char** error );
 void printExpression( const LNZnode* expression );
 
 
-#endif //PARSER_H
+#endif //LNZ_PARSER_H

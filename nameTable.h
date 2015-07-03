@@ -2,14 +2,12 @@
 // Copyright (c) Jonathan(Jon) DuBois 2015. This file is part of LNZ.         //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Name tables associating strings with 64 bit integers using tries.
-
-#ifndef NAMETABLE_H
-#define NAMETABLE_H
+#ifndef LNZ_NAMETABLE_H
+#define LNZ_NAMETABLE_H
 
 // A trie based name table associating strings with 64 bit integers. 0 is not a valid index; they begin at 1.
 // This is fast but massive. It could be improved with embedded strings.
-// If the same name is added more than once, the latest index added is returned.
+// If the same name is added more than once, the latest index added is returned when queried.
 typedef struct indexNode{
   u64 index;
   struct indexNode* next;
@@ -41,5 +39,5 @@ void popNameTable( nameTable* nt );
 void printNameTable( const nameTable* nt );
 
 
-#endif //NAMETABLE_H 
+#endif //LNZ_NAMETABLE_H 
 
