@@ -1,0 +1,10 @@
+NUL is just whitespace.
+[] is the same as () and '' and "" are the same.
+
+\ is lambda and . seperates the arguments from the body
+
+/ is for commands
+
+For example:
+\x.[\y.y y] [\y.x y y]
+

@@ -54,6 +54,21 @@ typedef double f64;
 
 #define pi 3.1415926535897932384626433832795028841971693993751058209749445923078
 
+
+// The actual programs are stored as 128 bit nodes. The 32 bit pointers are just
+// integer offsets into the 128-bit heap. All nodes contain a 32-bit reference count.
+//lambda ( 0-32bits ) body(32-bit pointer)
+//application (1-32 bits) func(32-bit pointer) arg(32-bit pointer)
+//free variable (2-32 bits) lambda(32-bit pointer)
+//data (3-32 bits) data(64-bit data) 
+//builtin function ( 1024 + function number ) arg1(32-bit pointer) arg2(32-bit pointer)
+typedef struct{
+  u32 type;
+  u32 references;
+  u64 data;
+} LNZnode;
+
+
 void LNZdie( const char* );
 
 // Memory wrappers.

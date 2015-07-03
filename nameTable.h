@@ -2,7 +2,7 @@
 // Copyright (c) Jonathan(Jon) DuBois 2015. This file is part of LNZ.         //
 ////////////////////////////////////////////////////////////////////////////////
 
-// name tables associating strings with 64 bit integers using tries.
+// Name tables associating strings with 64 bit integers using tries.
 
 #ifndef NAMETABLE_H
 #define NAMETABLE_H
