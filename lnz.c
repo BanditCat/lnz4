@@ -41,6 +41,25 @@ void LNZfree( void* mem ){
 #endif
 }
 
+LNZprogram* newProgram( void ){
+  LNZprogram* ans = LNZmalloc( sizeof( LNZprogram ) );
+  ans->heapsize = LNZ_INITIAL_HEAP_SIZE;
+  ans->heap = LNZmalloc( sizeof( LNZnode ) * ans->heapsize ); 
+  ans->frees = newStack();
+  // Mark all addresses free.
+  for( u32 i = 0; i < ans->heapsize; ++i )
+    push( ans->frees, i );
+    
+  return ans;
+}
+void deleteProgram( LNZprogram* p ){
+  deleteStack( p->frees );
+  
+  LNZfree( p->heap );
+  LNZfree( p );
+}
+
+
 #ifdef DEBUG
 u64 LNZmallocCount( void ){
   return lnzMallocCount;

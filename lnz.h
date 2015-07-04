@@ -72,14 +72,20 @@ typedef struct{
 #include "nameTable.h"
 #include "stack.h"
 
+#define LNZ_INITIAL_HEAP_SIZE 1024
+
 typedef struct{
   LNZnode* heap;
-  u32 heapSize;
-  u32 nodeCount;
+  u32 heapsize;
+  stack* frees;
   nameTable names;
-
+  nameTable pointers;
 } LNZprogram;
 
+LNZprogram* newProgram( void );
+void deleteProgram( LNZprogram* p );
+u32 mallocNode( LNZprogram* p );
+void freeNode( LNZprogram* p, u32 node );
 
 
 void LNZdie( const char* );

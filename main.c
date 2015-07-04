@@ -42,15 +42,18 @@ int main( int argc, char** argv ){
 
 
   const char* err;
-  LNZnode* expr;
+  LNZprogram* prog = newProgram();
+  u32 expr;
 
   const char* code = "  d f   ";
 
-  expr = parseExpression( (const u8*)code, strlen( code ), &err );
-  if( expr == NULL )
-    printf( "%s", err );
-  else printExpression( expr );
 
+  expr = parseExpression( (const u8*)code, strlen( code ), &err, prog );
+  if( err != NULL )
+    printf( "%s", err );
+  else printExpression( expr, prog );
+
+  deleteProgram( prog );
 
 
 #ifdef DEBUG

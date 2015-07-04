@@ -23,7 +23,7 @@ int isName( u8 c ){
 }
 
 // This returns the parsed expression as a node, or NULL. If NULL is returned, error is made to point at an error message.
-LNZnode* parseExpression( const u8* string, u64 length, const char** error ){
+u32 parseExpression( const u8* string, u64 length, const char** error, LNZprogram* p ){
   *error = NULL;
   const u8* s = string;
   u64 l = length;
@@ -37,15 +37,15 @@ LNZnode* parseExpression( const u8* string, u64 length, const char** error ){
     --l;
   if( !l ){
     *error = "Syntax error: null expression.";
-    return NULL;
+    return 0;
   }
   // Handle parens.
   if( *s == '[' ){
     if( s[ l - 1 ] != ']' ){
       *error = "Syntax error: mismatched parentheses.";
-      return NULL;
+      return 0;
     }
-    return parseExpression( s + 1, l - 2, error ); 
+    return parseExpression( s + 1, l - 2, error, p ); 
   }
   
   // Handle lambdas
@@ -53,24 +53,23 @@ LNZnode* parseExpression( const u8* string, u64 length, const char** error ){
     ++s;
     --l;
     if( !l || !isName( *s ) ){
-      *error = "Syntax error: malformed lambda.";
-      return NULL;
+      *error = "Syntax error: malformed lambda, expected a name.";
+      return 0;
     }
     u64 i = 0;
+    
     while( i < l && isName( s[ i ] ) )
       ++i;
-    
-      
     
   }
 
   
-  return (LNZnode*)1;
+  return 1;
 
 }
 
 
 
-void printExpression( const LNZnode* expression ){
-  printf( "foo%p", (void *)expression );
+void printExpression( u32 expression, const LNZprogram* p ){
+  printf( "foo%p", (void*)( expression + p ) );
 }
