@@ -100,8 +100,13 @@ u64 getIndex( const nameTable* nt, const u8* name, u64 namelen ){
     return ntn->indices->index;
 }
 // Returns the string associated with an index, indices are 1 based and there is no error checking.
-const u8* getName( const nameTable* nt, u64 index ){
+const u8* getName( const nameTable* nt, u64 index, u64* len ){
+  if( len != NULL )
+    *len = nt->revdictSizes[ index - 1 ];
   return nt->revdict[ index - 1 ];
+}
+u64 getNameLength( const nameTable* nt, u64 index ){
+  return nt->revdictSizes[ index - 1 ];
 }
 
 

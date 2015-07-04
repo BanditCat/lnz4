@@ -78,8 +78,8 @@ typedef struct{
   LNZnode* heap;
   u32 heapsize;
   stack* frees;
-  nameTable names;
-  nameTable pointers;
+  nameTable* names;
+  nameTable* pointers;
 } LNZprogram;
 
 LNZprogram* newProgram( void );

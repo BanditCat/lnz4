@@ -30,8 +30,8 @@ void deleteNameTable( nameTable* nt );
 void addNameToTable( nameTable* nt, const u8* name, u64 namelen );
 // Returns the 1-based index of a string, or 0 if there isn't one.  
 u64 getIndex( const nameTable* nt, const u8* name, u64 namelen );
-// Returns the string associated with an index, indices are 1 based and there is no error checking.
-const u8* getName( const nameTable* nt, u64 index );
+// Returns the string associated with an index, indices are 1 based and there is no error checking. len is set to the length of the name.
+const u8* getName( const nameTable* nt, u64 index, u64* len );
 // Pops the last name added off.
 void popNameTable( nameTable* nt );
 

@@ -33,7 +33,7 @@ int main( int argc, char** argv ){
   }
   
 
-  printf( "getName( 2 ): %s\n", getName( nt, 2 ) );
+  printf( "getName( 2 ): %s\n", getName( nt, 2, NULL ) );
   printf( "getIndex( \"fol\", 3 ): %u\n", (unsigned int)getIndex( nt, (u8*)"fol", 3 ) );
   printf( "getIndex( \"foll\", 4 ): %u\n", (unsigned int)getIndex( nt, (u8*)"foll", 4 ) );
   printf( "getIndex( \"follower\", 8 ): %u\n", (unsigned int)getIndex( nt, (u8*)"follower", 8 ) );
