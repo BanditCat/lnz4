@@ -26,6 +26,6 @@ void push( stack* st, u32 val ){
   }
   st->stack[ st->size++ ] = val;
 }
-void pop( stack* st ){
-  --st->size;
+u32 pop( stack* st ){
+  return st->stack[ --st->size ];
 }

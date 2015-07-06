@@ -15,7 +15,7 @@ typedef struct{
 stack* newStack( void );
 void deleteStack( stack* st );
 void push( stack* st, u32 val );
-void pop( stack* st );
+u32 pop( stack* st );
 
 
 #endif //LNZ_STACK_H

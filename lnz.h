@@ -63,6 +63,12 @@ typedef double f64;
 //free variable (2-32 bits) lambda(32-bit pointer)
 //data (3-32 bits) data(64-bit data) 
 //builtin function ( 1024 + function number ) arg1(32-bit pointer) arg2(32-bit pointer)
+
+#define LNZ_LAMBDA_TYPE 0
+#define LNZ_APPLICATION_TYPE 1
+#define LNZ_FREE_TYPE 2
+#define LNZ_DATA_TYPE 3
+#define LNZ_BUILTIN_START 1024
 typedef struct{
   u32 type;
   u32 references;
@@ -72,7 +78,8 @@ typedef struct{
 #include "nameTable.h"
 #include "stack.h"
 
-#define LNZ_INITIAL_HEAP_SIZE 1024
+// BUGBUG should be 1024
+#define LNZ_INITIAL_HEAP_SIZE 2
 
 typedef struct{
   LNZnode* heap;
@@ -87,6 +94,11 @@ void deleteProgram( LNZprogram* p );
 u32 mallocNode( LNZprogram* p );
 void freeNode( LNZprogram* p, u32 node );
 
+
+void addNamePointerPair( LNZprogram* p, const u8* name, u64 namelen, u32 pointer );
+void popNamePointerPair( LNZprogram* p );
+u32 getPointerFromName( LNZprogram* p, const u8* name, u64 namelen );
+const u8* getNameFromPointer( LNZprogram* p, u32 pointer, u64* len );
 
 void LNZdie( const char* );
 

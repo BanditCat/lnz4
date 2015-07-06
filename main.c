@@ -41,17 +41,17 @@ int main( int argc, char** argv ){
   deleteNameTable( nt );
 
 
-  const char* err;
+  const char* err = "bazly";
   LNZprogram* prog = newProgram();
   u32 expr;
 
-  const char* code = "  d f   ";
+  const char* code = "\\d.d d";
 
-
-  expr = parseExpression( (const u8*)code, strlen( code ), &err, prog );
+ 
+  expr = parseExpression( prog, (const u8*)code, strlen( code ), &err, 0 );
   if( err != NULL )
-    printf( "%s", err );
-  else printExpression( expr, prog );
+    printf( "%s\n\n", err );
+  else printExpression( prog, expr );
 
   deleteProgram( prog );
 

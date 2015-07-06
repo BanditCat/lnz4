@@ -41,6 +41,22 @@ void LNZfree( void* mem ){
 #endif
 }
 
+u32 mallocNode( LNZprogram* p ){
+  if( p->frees->size == 0 ){
+    LNZnode* nh = LNZmalloc( sizeof( LNZnode ) * p->heapsize * 2 );
+    memcpy( nh, p->heap, sizeof( LNZnode ) * p->heapsize );
+    LNZfree( p->heap );
+    p->heap = nh;
+    for( u64 i = p->heapsize; i < p->heapsize * 2; ++i )
+      push( p->frees, i );
+    p->heapsize *= 2;
+  }
+  return pop( p->frees );
+}
+void freeNode( LNZprogram* p, u32 w ){
+  push( p->frees, w );
+}
+
 LNZprogram* newProgram( void ){
   LNZprogram* ans = LNZmalloc( sizeof( LNZprogram ) );
   ans->heapsize = LNZ_INITIAL_HEAP_SIZE;
@@ -75,10 +91,10 @@ u32 getPointerFromName( LNZprogram* p, const u8* name, u64 namelen ){
     return 0;
   return *( (const u32*)getName( p->pointers, i, NULL ) );
 }
-const u8* getNameFromPointer( LNZprogram* p, const u32 pointer, u64* len ){
+const u8* getNameFromPointer( LNZprogram* p, u32 pointer, u64* len ){
   u64 i = getIndex( p->names, (const u8*)( &pointer ), sizeof( u32 ) );
   if( !i )
-    return 0;
+    return NULL;
   return getName( p->names, i, len );
 }
 

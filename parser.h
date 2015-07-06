@@ -18,8 +18,8 @@ int isName( u8 c );
 
 // Parses an expression or stores an error string in error. Returns the index of the
 // node on the heap.
-u32 parseExpression( const u8* string, u64 length, const char** error, LNZprogram* p );
-void printExpression( u32 index, const LNZprogram* p );
+u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** error, u64 global );
+void printExpression( const LNZprogram* p, u32 index );
 
 
 #endif //LNZ_PARSER_H
