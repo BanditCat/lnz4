@@ -45,7 +45,7 @@ int main( int argc, char** argv ){
   LNZprogram* prog = newProgram();
   u32 expr;
 
-  const char* code = "\\d.d d";
+  const char* code = "\\d a.[d d] a";
 
  
   expr = parseExpression( prog, (const u8*)code, strlen( code ), &err, 0 );

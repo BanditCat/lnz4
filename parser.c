@@ -57,10 +57,10 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
  
     // Eat identifiers, add them to the nametables, and build up an empty lambda at
     // top.
-    u64 namelen = 0;
     u64 lambdaCount = 0;
     u32 cur, top;
     do{
+      u64 namelen = 0;
       while( namelen < l && isName( s[ namelen ] ) )
 	++namelen;
       
@@ -78,6 +78,7 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
 
       addNamePointerPair( p, s, namelen, newnode );
 
+      // Eat trailing namespace
       while( namelen < l && isWhitespace( s[ namelen ] ) )
 	++namelen;
 
@@ -91,7 +92,8 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
 	     
     }while( *s != '.' );
     // Parse the body.
-    p->heap[ cur ].data = parseExpression( p, s + 1, l - 1, error, global );
+    u32 pe = parseExpression( p, s + 1, l - 1, error, global );
+    p->heap[ cur ].data = pe;
     // Pop scope.
     while( lambdaCount ){
       --lambdaCount;
@@ -130,7 +132,7 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
       }
     
       arg = parseExpression( p, s + 1, namelen - 2, error, global );
-      if( error != NULL )
+      if( *error != NULL )
 	return 0;
 
     }else{
@@ -204,6 +206,8 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
 
 
 void printExpression( const LNZprogram* p, u32 expression ){
+  
+
   printf( "node #%u\n\n", expression );
 
 

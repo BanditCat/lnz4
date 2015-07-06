@@ -79,7 +79,7 @@ typedef struct{
 #include "stack.h"
 
 // BUGBUG should be 1024
-#define LNZ_INITIAL_HEAP_SIZE 2
+#define LNZ_INITIAL_HEAP_SIZE 1
 
 typedef struct{
   LNZnode* heap;
