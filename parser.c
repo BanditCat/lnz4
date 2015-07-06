@@ -205,20 +205,34 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
 
 
 
-void printExpression( const LNZprogram* p, u32 expression ){
-  
+void printExpression( const LNZprogram* p, u32 expression, u32 level ){
+  if( p->heap[ expression ].type == LNZ_LAMBDA_TYPE ){
+    printf( "\\" );
+    while( p->heap[ expression ].type == LNZ_LAMBDA_TYPE ){
+      printf( "l%u", expression );
+      expression = p->heap[ expression ].data;
+      if( p->heap[ expression ].type == LNZ_LAMBDA_TYPE )
+	printf( " " );
+      else{
+	printf( "." );
+	printExpression( p, expression, level + 1 );
+      }
+    }
+  }else if( p->heap[ expression ].type == LNZ_APPLICATION_TYPE ){
+    u32 low = p->heap[ expression ].data & (u32)( -1 );
+    u32 high = p->heap[ expression ].data >> 32;
+    if( p->heap[ low ].type == LNZ_APPLICATION_TYPE || 
+	p->heap[ low ].type == LNZ_LAMBDA_TYPE ){
+      printf( "(" );
+      printExpression( p, low, level + 1 );
+      printf( ") " );
+      printExpression( p, high, level + 1 );
+    }else{
+      printExpression( p, low, level + 1 );
+      printf( " " );
+      printExpression( p, high, level + 1 );
+    }
+  }else if( p->heap[ expression ].type == LNZ_FREE_TYPE )
+    printf( "l%u", (u32)p->heap[ expression ].data );
 
-  printf( "node #%u\n\n", expression );
-
-
-  for( u64 i = 0; i < p->heapsize; ++i ){
-    printf( "node %u, type %u, references %u, data low %u, data high %u\n",
-	    (u32)i,
-	    p->heap[ i ].type,
-	    p->heap[ i ].references,
-	    (u32)( p->heap[ i ].data & (u32)( -1 ) ),
-	    (u32)( p->heap[ i ].data >> 32 )
-	    );
-    (void)expression;
-  }
 }

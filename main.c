@@ -45,13 +45,13 @@ int main( int argc, char** argv ){
   LNZprogram* prog = newProgram();
   u32 expr;
 
-  const char* code = "\\d a.[d d] a";
+  const char* code = "\\d a ad.[a ad] [d a]";
 
  
   expr = parseExpression( prog, (const u8*)code, strlen( code ), &err, 0 );
   if( err != NULL )
     printf( "%s\n\n", err );
-  else printExpression( prog, expr );
+  else printExpression( prog, expr, 0 );
 
   deleteProgram( prog );
 
