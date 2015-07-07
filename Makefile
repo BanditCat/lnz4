@@ -19,7 +19,6 @@ LDFLAGS=
 TARGET=lnz.exe
 TARGETDEFINE=-DWINDOWS
 OBJS:=$(OBJS) windowsResource.o
-STATE:=octree
 
 # Actual build rules.
 # These are supposed everything that might be edited.
@@ -62,7 +61,7 @@ debug: CCFLAGS:=$(TARGETDEFINE) -ggdb -DDEBUG $(CCFLAGS)
 
 .PHONY: clean
 clean:
-	rm -f ./*.o ./$(TARGET) ./$(STATE)
+	rm -f ./*.o ./$(TARGET) 
 
 .PHONY: backup
 backup: clean release

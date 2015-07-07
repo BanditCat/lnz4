@@ -17,9 +17,18 @@ int isReserved( u8 c );
 int isName( u8 c );
 
 // Parses an expression or stores an error string in error. Returns the index of the
-// node on the heap.
-u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** error, u64 global );
+// node on the heap. On error, the error position is returned.
+u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** error );
+
+// Returns number of characters parsed, on error this will point to the error.
+u64 parseLine( LNZprogram* p, const u8* string, u64 length, const char** error );
+
+// *error will be NULL on success, otherwise you must LNZfree it.
+LNZprogram* parseProgram( const u8* string, u64 length, const char** error );
+
+// Call with level set to 0. 
 void printExpression( const LNZprogram* p, u32 index, u32 level );
+void printProgram( const LNZprogram* p );
 
 
 #endif //LNZ_PARSER_H

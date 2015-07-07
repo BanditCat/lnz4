@@ -2,18 +2,12 @@
 // Copyright (c) Jonathan(Jon) DuBois 2015. This file is part of LNZ.         //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <windows.h>
-
 #include "lnz.h"
 
 #ifdef DEBUG
 static u64 lnzMallocCount = 0;
 #endif
 
-void LNZdie( const char* msg ){
-  MessageBoxA( NULL, (char*)msg, "Exiting LNZ...", 0 );
-  exit( 0 );
-}
 
 void* LNZmalloc( u64 size ){
   void* ans = malloc( size );
@@ -62,6 +56,7 @@ LNZprogram* newProgram( void ){
   ans->heapsize = LNZ_INITIAL_HEAP_SIZE;
   ans->heap = LNZmalloc( sizeof( LNZnode ) * ans->heapsize ); 
   ans->frees = newStack();
+  ans->global = 0;
   // Mark all addresses free.
   for( u32 i = 0; i < ans->heapsize; ++i )
     push( ans->frees, i );

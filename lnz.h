@@ -9,8 +9,10 @@
 
 #include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 
 // Types.
 typedef unsigned char u8;
@@ -87,6 +89,7 @@ typedef struct{
   stack* frees;
   nameTable* names;
   nameTable* pointers;
+  u64 global;
 } LNZprogram;
 
 LNZprogram* newProgram( void );
@@ -107,6 +110,11 @@ void* LNZmalloc( u64 size );
 void* LNZcalloc( u64 size );
 void LNZfree( void* mem );
 
+// These functions return malloc'd resources that need to be free'd.
+// The size in bytes is stored in size. The second version exits on failure.
+// All data has a complementary nul, so buffer size is actually size + 1.
+u8* LNZLoadResource( const char* name, u64* size );
+u8* LNZLoadResourceOrDie( const char* name, u64* size );
 
 #ifdef DEBUG
 u64 LNZmallocCount( void );

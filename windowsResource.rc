@@ -4,6 +4,8 @@
 
 101 ICON "bcj.ico"
 
+base.lnz RCDATA "base.lnz"
+
 
 1 VERSIONINFO
 FILEVERSION     0,0,0,1

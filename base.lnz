@@ -1,0 +1,9 @@
+id = \x.x;
+
+nil = \x.x;
+
+true = \x y.x;
+
+false = \x y.y;
+
+if = \bool then else.bool then else;
