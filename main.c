@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) Jonathan(Jon) DuBois 2014. This file is part of LNZ.         //
+// Copyright (c) Jonathan(Jon) DuBois 2015. This file is part of LNZ.         //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "lnz.h"
@@ -61,3 +61,5 @@ int main( int argc, char** argv ){
   printf( "Malloc count (non-zero is a memory leak): %u\n", (unsigned int)LNZmallocCount() );
 #endif
 }
+
+
