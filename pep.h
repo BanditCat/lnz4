@@ -13,7 +13,10 @@ static const char* pepTalks[] = {
   "Almost perfect code!",
   "Nice work so far.",
   "Why not smoke a blunt and have some coffee?",
-  "Beep.",
-  "I bet there's only 1 error."
+  "Beep.\a",
+  "I bet there's only 1 error.",
+  "If I can write this, you can write that, for sure.",
+  "Go programmer go!",
+  "Probably just cosmic rays."
 };
 

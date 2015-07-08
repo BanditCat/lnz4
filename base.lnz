@@ -1,17 +1,29 @@
-id = \x.x;
-
-nil = id;
-
-true = \x y.x;
+nil = \x.x;
 
 false = \x.nil;
 
-if = \bool then else.bool then else;
+true = \x y.x;
 
+if = \bool then else.bool then else;
 
 cons = \h t x.x h t;
 
 head = \c.c true;
 
 tail = \c.c false;
+
+iscons = \x.x [\z.false] true;
+
+not = \x.x false true;
+
+isnil = \x.not [iscons x];
+
+Y = \x.[\y.x [y y]] [\y.x [y y]];
+
+
+
+
+
+
+
 

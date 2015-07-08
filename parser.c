@@ -110,7 +110,7 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
   // Handle applications and free variables.
 
   u64 applicationCount = 0;
-  u32 top, cur, oc;
+  u32 top;
   // Read one expression at a time; must be parenthetical or a name.
   do{
     u32 arg;
@@ -167,21 +167,27 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
       }
     }
 
-    u32 newnode = mallocNode( p );
+     
+    u32 newnode;
+    if( applicationCount == 1 )
+      newnode = top;
+    else{
+      newnode = mallocNode( p );
+      p->heap[ newnode ].data = 0;
+    }
+
     p->heap[ newnode ].type = LNZ_APPLICATION_TYPE;
     p->heap[ newnode ].references = 1;
-    p->heap[ newnode ].data = arg;
-     
+    p->heap[ newnode ].data += ( (u64)arg ) << 32;
       
-    if( applicationCount ) 
-      p->heap[ cur ].data += ( ( (u64)newnode ) << 32 );
-    else
-      top = newnode;
+    if( applicationCount > 1 ){
+      p->heap[ newnode ].data += top;
+    } else if( !applicationCount )
+	p->heap[ newnode ].data >>= 32;
+
+    top = newnode;
       
-    
-    ++applicationCount;
-    oc = cur;
-    cur = newnode;
+      ++applicationCount;
   
     // Eat up trailing whitespace.
     while( namelen < l && isWhitespace( s[ namelen ] ) )
@@ -198,12 +204,8 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
     freeNode( p, top );
     return ans;
   }else{
-    p->heap[ oc ].data &= ( (u32)-1 );
-    p->heap[ oc ].data += p->heap[ cur ].data << 32;
-    freeNode( p, cur );
     return top;
   }  
-
 }
 
 u64 parseLine( LNZprogram* p, const u8* string, u64 length, const char **error ){
@@ -331,15 +333,21 @@ void printExpression( const LNZprogram* p, u32 expression, u32 level ){
     }else if( p->heap[ expression ].type == LNZ_APPLICATION_TYPE ){
       u32 low = p->heap[ expression ].data & (u32)( -1 );
       u32 high = p->heap[ expression ].data >> 32;
-      ind = getIndex( p->pointers, (const u8*)( &low ), sizeof( u32 ) );
-      if( ( p->heap[ low ].type == LNZ_APPLICATION_TYPE || 
-	  p->heap[ low ].type == LNZ_LAMBDA_TYPE ) && !ind ){
+      ind = getIndex( p->pointers, (const u8*)( &high ), sizeof( u32 ) );
+      u64 lind = getIndex( p->pointers, (const u8*)( &low ), sizeof( u32 ) );
+      if( p->heap[ low ].type == LNZ_LAMBDA_TYPE && !lind ){ 
 	printf( "[" );
 	printExpression( p, low, level + 1 );
-	printf( "] " );
-	printExpression( p, high, level + 1 );
-      }else{
+	printf( "]" );
+      }else
 	printExpression( p, low, level + 1 );
+      if( ( p->heap[ high ].type == LNZ_APPLICATION_TYPE || 
+	  p->heap[ high ].type == LNZ_LAMBDA_TYPE ) && !ind ){
+
+	printf( " [" );
+	printExpression( p, high, level + 1 );
+	printf( "]" );
+      }else{
 	printf( " " );
 	printExpression( p, high, level + 1 );
       }
