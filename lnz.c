@@ -41,8 +41,8 @@ u32 mallocNode( LNZprogram* p ){
     memcpy( nh, p->heap, sizeof( LNZnode ) * p->heapsize );
     LNZfree( p->heap );
     p->heap = nh;
-    for( u64 i = p->heapsize; i < p->heapsize * 2; ++i )
-      push( p->frees, i );
+    for( u64 i = 0; i < p->heapsize; ++i )
+      push( p->frees, ( p->heapsize * 2 ) - i - 1 );
     p->heapsize *= 2;
   }
   return pop( p->frees );
@@ -59,7 +59,7 @@ LNZprogram* newProgram( void ){
   ans->global = 0;
   // Mark all addresses free.
   for( u32 i = 0; i < ans->heapsize; ++i )
-    push( ans->frees, i );
+    push( ans->frees, ans->heapsize - i - 1 );
   ans->names = newNameTable();
   ans->pointers = newNameTable();
     
@@ -99,3 +99,19 @@ u64 LNZmallocCount( void ){
 }
 #endif  
 
+void addStringChar( LNZprogram* p, u32 string, u8 c ){
+  u32 back = p->heap[ string ].data >> 32;
+  u32 len = p->heap[ back ].references;
+  if( len && !( len % 8 ) ){
+    u32 nn = mallocNode( p );
+    p->heap[ nn ].type = LNZ_DATA_TYPE;
+    p->heap[ nn ].references = len + 1; 
+    p->heap[ nn ].data = (u64)c;
+    p->heap[ back ].references = nn;
+    p->heap[ string ].data &= (u64)( (u32)-1 );
+    p->heap[ string ].data += (u64)( nn ) << 32;
+  }else{
+    ++p->heap[ back ].references;
+    p->heap[ back ].data += ( (u64)c ) << ( 8 * ( len % 8 ) );
+  }
+}

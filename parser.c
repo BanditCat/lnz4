@@ -106,8 +106,7 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
     return top;
   }
 
-
-  // Handle applications and free variables.
+  // Handle applications,free variables, numbers and strings.
 
   u64 applicationCount = 0;
   u32 top;
@@ -115,16 +114,50 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
   do{
     u32 arg;
     u64 namelen = 0;
+    // Handle strings.
+    if( s[ namelen ] == '\'' ){
+      u32 nullstring = mallocNode( p );
+      p->heap[ nullstring ].type = LNZ_DATA_TYPE;
+      p->heap[ nullstring ].references = 0; // size.
+      p->heap[ nullstring ].data = 0;
+      arg = mallocNode( p );
+      p->heap[ arg ].type = LNZ_STRING_TYPE;
+      p->heap[ arg ].references = 1; // size.
+      p->heap[ arg ].data = ( (u64)nullstring ) << 32;
+      p->heap[ arg ].data += ( (u64)nullstring );
+      
+      
+      u64 bsc = 0;
+      while( namelen < l ){
+	if( *s == '\\' )
+	  ++bsc;
+	else{
+	  
+	  while( bsc >= 2 ){
+	    bsc -= 2;
+	    addStringChar( p, arg, '\\' );
+	  }
+	  bsc = 0;
+	}
+	++namelen;
+      }
+      
     // Handle parenthetical subexpressions.
-    if( *s == '[' ){
+    }else if( *s == '[' ){
       namelen = 1;
       u64 f = 1;
-      
+      // scan for parentheses.
+      u64 bsc = 0;
       while( namelen < l ){
-	if( s[ namelen ] == '[' )
-	  ++f;
-	if( s[ namelen ] == ']' )
-	  --f;
+	if( s[ namelen ] == '\\' )
+	  ++bsc;
+	else{
+	  if( !( bsc % 2 ) && s[ namelen ] == '[' )
+	    ++f;
+	  if( !( bsc % 2 ) && s[ namelen ] == ']' )
+	    --f;
+	  bsc = 0;
+	}
 	++namelen;
 	if( !f )
 	  break;
@@ -139,13 +172,12 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
 	return ( s - string ) + 1 + arg;
 
     }else{
-      // Handle identifiers.
       if( !l || !isName( *s ) ){
 	*error = "Syntax error: malformed expression.";
 	return s - string;
       }
-  
-      
+        
+      // Handle identifiers.
       while( namelen < l && isName( s[ namelen ] ) )
 	++namelen;    
 
@@ -166,7 +198,6 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
 	p->heap[ arg ].data = *( ( u32* )( getName( p->pointers, nind, NULL ) ) );
       }
     }
-
      
     u32 newnode;
     if( applicationCount == 1 )
@@ -187,12 +218,11 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
 
     top = newnode;
       
-      ++applicationCount;
+    ++applicationCount;
   
     // Eat up trailing whitespace.
     while( namelen < l && isWhitespace( s[ namelen ] ) )
       ++namelen;
-
       
     s += namelen;
     l -= namelen;
@@ -370,3 +400,6 @@ void printProgram( const LNZprogram* p ){
     printf( ";\n\n" );
   }
 }
+
+
+

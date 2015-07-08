@@ -1,10 +1,5 @@
-NUL is just whitespace.
-[] is the same as () and '' and "" are the same.
-
-\ is lambda and . seperates the arguments from the body
-
-/ is for commands
-
-For example:
-\x.[\y.y y] [\y.x y y]
+128-bit nodes
+32-bit type and reference, 64-bit data
+for strings and arbitrary ints, there is a header node for reference counting with a pointer to the first and last element.
+the string or int itself is composed of data nodes in a linked list. There are no reference counts, instead reference is a pointer to the next node or, in the case of the last element, the length in bytes( strings ) or nodes ( ints ).  This means strings are capped at 4GB. 
 

@@ -69,7 +69,9 @@ typedef double f64;
 #define LNZ_LAMBDA_TYPE 0
 #define LNZ_APPLICATION_TYPE 1
 #define LNZ_FREE_TYPE 2
-#define LNZ_DATA_TYPE 3
+#define LNZ_STRING_TYPE 3
+#define LNZ_INT_TYPE 4
+#define LNZ_DATA_TYPE 5
 #define LNZ_BUILTIN_START 1024
 typedef struct{
   u32 type;
@@ -80,7 +82,6 @@ typedef struct{
 #include "nameTable.h"
 #include "stack.h"
 
-// BUGBUG should be 1024
 #define LNZ_INITIAL_HEAP_SIZE 1
 
 typedef struct{
@@ -97,7 +98,10 @@ void deleteProgram( LNZprogram* p );
 u32 mallocNode( LNZprogram* p );
 void freeNode( LNZprogram* p, u32 node );
 
+// Adds a character c to the end of the string at p->heap[ string ].
+void addStringChar( LNZprogram* p, u32 string, u8 c );
 
+// Add a name pointer pair to the tables. A global.
 void addNamePointerPair( LNZprogram* p, const u8* name, u64 namelen, u32 pointer );
 void popNamePointerPair( LNZprogram* p );
 u32 getPointerFromName( LNZprogram* p, const u8* name, u64 namelen );

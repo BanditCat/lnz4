@@ -31,4 +31,7 @@ void printExpression( const LNZprogram* p, u32 index, u32 level );
 void printProgram( const LNZprogram* p );
 
 
+// Does at least count beta-reductions, returns the actual number of reductions.
+void reduce( LNZprogram* p, u64 count, u32 expression );
+
 #endif //LNZ_PARSER_H

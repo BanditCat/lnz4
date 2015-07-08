@@ -6,7 +6,7 @@ true = \x y.x;
 
 if = \bool then else.bool then else;
 
-cons = \h t x.x h t;
+cons = \h t.[\x.x h t];
 
 head = \c.c true;
 
@@ -23,7 +23,7 @@ Y = \x.[\y.x [y y]] [\y.x [y y]];
 
 
 
-
+aString = 'foo';
 
 
 
