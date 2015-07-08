@@ -21,7 +21,7 @@ TARGETDEFINE=-DWINDOWS
 OBJS:=$(OBJS) windowsResource.o
 
 # Actual build rules.
-# These are supposed everything that might be edited.
+# These are supposed to be everything that might be edited.
 TXTS:=$(TXTS) $(wildcard ./*.txt) ./Makefile ./README.md ./windowsResource.rc
 SRCS:=$(SRCS) $(wildcard ./*.h) $(wildcard ./*.c)
 CS:=$(CS) $(wildcard ./*.c)
@@ -31,7 +31,7 @@ $(OBJS): Makefile
 include deps
 
 # windres
-windowsResource.o: windowsResource.rc bcj.ico
+windowsResource.o: windowsResource.rc bcj.ico ./base.lnz
 	windres $< -o $@
 
 # Override defaults

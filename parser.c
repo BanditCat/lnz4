@@ -211,14 +211,14 @@ u64 parseLine( LNZprogram* p, const u8* string, u64 length, const char **error )
   u64 l = length;
 
   // Eat up white space and parse an lvalue.
-  while( isWhitespace( *s ) ){
+  while( l && isWhitespace( *s ) ){
     ++s;
     --l;
   }  
   u64 namelen = 0;
-  while( isName( s[ namelen ] ) && namelen < l )
+  while( namelen < l && isName( s[ namelen ] ) )
     ++namelen;
-  if( !namelen || namelen == l ){
+  if( !namelen || namelen >= l ){
     *error = "Syntax error: malformed equation";
     return s - string;
   }
@@ -227,7 +227,7 @@ u64 parseLine( LNZprogram* p, const u8* string, u64 length, const char **error )
   l -= namelen;
   
   // Eat up white space and parse an =.
-  while( isWhitespace( *s ) ){
+  while( l && isWhitespace( *s ) ){
     ++s;
     --l;
   }  
@@ -259,6 +259,13 @@ u64 parseLine( LNZprogram* p, const u8* string, u64 length, const char **error )
   ++p->global;
   
   s += exprlen + 1;
+  l -= exprlen + 1;
+
+  while( l && isWhitespace( *s ) ){
+    ++s;
+    --l;
+  }  
+
 
   return s - string;
 }

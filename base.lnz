@@ -1,9 +1,17 @@
 id = \x.x;
 
-nil = \x.x;
+nil = id;
 
 true = \x y.x;
 
-false = \x y.y;
+false = \x.nil;
 
 if = \bool then else.bool then else;
+
+
+cons = \h t x.x h t;
+
+head = \c.c true;
+
+tail = \c.c false;
+
