@@ -23,7 +23,7 @@ Y = \x.[\y.x [y y]] [\y.x [y y]];
 
 
 
-aString = 'foo';
+aString = '12345789012345\'6';
 
 
 

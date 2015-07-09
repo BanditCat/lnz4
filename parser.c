@@ -116,6 +116,7 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
     u64 namelen = 0;
     // Handle strings.
     if( s[ namelen ] == '\'' ){
+      ++namelen;
       u32 nullstring = mallocNode( p );
       p->heap[ nullstring ].type = LNZ_DATA_TYPE;
       p->heap[ nullstring ].references = 0; // size.
@@ -129,7 +130,7 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
       
       u64 bsc = 0;
       while( namelen < l ){
-	if( *s == '\'' ){
+	if( s[ namelen ] == '\'' ){
 	  while( bsc >= 2 ){
 	    bsc -= 2;
 	    addStringChar( p, arg, '\\' );
@@ -138,7 +139,7 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
 	    addStringChar( p, arg, '\'' );
 	  else
 	    break;
-	} else if( *s == '\\' ){
+	}else if( s[ namelen ] == '\\' ){
 	  ++bsc;
 	}else{	  
 	  while( bsc >= 2 ){
@@ -150,7 +151,12 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
 	}
 	++namelen;
       }
-      
+      if( namelen == l || s[ namelen ] != '\'' ){
+	*error = "Syntax error: malformed string.";
+	return ( s - string ) + namelen;
+      }
+      ++namelen;
+
     // Handle parenthetical subexpressions.
     }else if( *s == '[' ){
       namelen = 1;
@@ -390,6 +396,25 @@ void printExpression( const LNZprogram* p, u32 expression, u32 level ){
 	printf( " " );
 	printExpression( p, high, level + 1 );
       }
+    }else if( p->heap[ expression ].type == LNZ_STRING_TYPE ){
+      u32 len = p->heap[ p->heap[ expression ].data >> 32 ].references;
+      u32 w = p->heap[ expression ].data & (u32)-1;
+      u64 shft = 0;
+      putchar( '\'' );
+      while( len ){
+	int pc = (int)( ( p->heap[ w ].data & ( ( (u64)255 ) << shft ) ) >> shft );
+	if( pc == '\'' || pc == '\\' )
+	  putchar( '\\' );
+	putchar( pc );
+	shft += 8;
+	if( shft >= 64 ){
+	  shft = 0;
+	  w = p->heap[ w ].references;
+	}
+	--len;
+      }
+      putchar( '\'' );
+
     }else if( p->heap[ expression ].type == LNZ_FREE_TYPE )
       printf( "l%u", (u32)p->heap[ expression ].data );
   } 
