@@ -129,15 +129,24 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
       
       u64 bsc = 0;
       while( namelen < l ){
-	if( *s == '\\' )
+	if( *s == '\'' ){
+	  while( bsc >= 2 ){
+	    bsc -= 2;
+	    addStringChar( p, arg, '\\' );
+	  }
+	  if( bsc )
+	    addStringChar( p, arg, '\'' );
+	  else
+	    break;
+	} else if( *s == '\\' ){
 	  ++bsc;
-	else{
-	  
+	}else{	  
 	  while( bsc >= 2 ){
 	    bsc -= 2;
 	    addStringChar( p, arg, '\\' );
 	  }
 	  bsc = 0;
+	  addStringChar( p, arg, s[ namelen ] );
 	}
 	++namelen;
       }
