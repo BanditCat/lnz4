@@ -164,13 +164,20 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
       u64 f = 1;
       // scan for parentheses.
       u64 bsc = 0;
+      u64 qm = 0;
       while( namelen < l ){
 	if( s[ namelen ] == '\\' )
 	  ++bsc;
-	else{
-	  if( !( bsc % 2 ) && s[ namelen ] == '[' )
+	else if( s[ namelen ] == '\'' ){
+	  if( !( bsc % 2 ) && qm )
+	    qm = 0;
+	  else if( !( bsc % 2 ) && !qm )
+	    qm = 1;
+	  bsc = 0;
+	}else{
+	  if( !qm && s[ namelen ] == '[' )
 	    ++f;
-	  if( !( bsc % 2 ) && s[ namelen ] == ']' )
+	  if( !qm && s[ namelen ] == ']' )
 	    --f;
 	  bsc = 0;
 	}
