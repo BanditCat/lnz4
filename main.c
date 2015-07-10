@@ -41,6 +41,38 @@ int main( int argc, char** argv ){
   /* deleteNameTable( nt ); */
 
 
+  char* foo = LNZmalloc( 1 );
+  char* bar = LNZmalloc( 1 );
+  u64 flen = 1;
+  u64 blen = 1;
+  foo[ 0 ] = '0';
+  bar[ 0 ] = '1';
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &foo, &flen, bar, blen );
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &foo, &flen, bar, blen );
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &bar, &blen, bar, blen );
+  addStringToString( &foo, &flen, bar, blen );
+  printf( "\n\nfoobar  \n" );
+  for( u64 i = 0; i < flen; ++i )
+    putchar( foo[ i ] );
+  printf( "\n\n" );
+  for( u64 i = 0; i < blen; ++i )
+    putchar( bar[ i ] );
+  printf( "\n\n" );
+  LNZfree( foo );
+  LNZfree( bar );
+
+
   const char* err = NULL;
  
   

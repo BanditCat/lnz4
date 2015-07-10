@@ -10,6 +10,9 @@
 // This function returns 1 if c is a whitespace. NUL is considered whitespace. Returns 0 otherwise.
 int isWhitespace( u8 c );
 
+// This function returns 1 if c is a number. Returns 0 otherwise.
+int isNumber( u8 c );
+
 // This function returns 0 unless c is a reserved (punctuation) character.
 int isReserved( u8 c );
 

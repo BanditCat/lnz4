@@ -71,7 +71,8 @@ typedef double f64;
 #define LNZ_FREE_TYPE 2
 #define LNZ_STRING_TYPE 3
 #define LNZ_INT_TYPE 4
-#define LNZ_DATA_TYPE 5
+#define LNZ_NEGATIVE_INT_TYPE 5
+#define LNZ_DATA_TYPE 6
 #define LNZ_BUILTIN_START 1024
 typedef struct{
   u32 type;
@@ -101,6 +102,12 @@ void freeNode( LNZprogram* p, u32 node );
 // Adds a character c to the end of the string at p->heap[ string ].
 void addStringChar( LNZprogram* p, u32 string, u8 c );
 
+// Converts an integer into a string. ignores sign.
+char* numberToString( const LNZprogram* p, u32 num, u64* len );
+
+// Adds two ascii integer strings. string must point to a mallocd pointer.
+void addStringToString( char** string, u64* len, const char* add, u64 addlen );
+
 // Add a name pointer pair to the tables. A global.
 void addNamePointerPair( LNZprogram* p, const u8* name, u64 namelen, u32 pointer );
 void popNamePointerPair( LNZprogram* p );
@@ -119,6 +126,10 @@ void LNZfree( void* mem );
 // All data has a complementary nul, so buffer size is actually size + 1.
 u8* LNZLoadResource( const char* name, u64* size );
 u8* LNZLoadResourceOrDie( const char* name, u64* size );
+
+
+void multiplyNumberByInt( LNZprogram* p, u32 arg, u64 x );
+void addIntToNumber( LNZprogram* p, u32 arg, u64 x );
 
 #ifdef DEBUG
 u64 LNZmallocCount( void );

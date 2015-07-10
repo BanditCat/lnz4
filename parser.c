@@ -23,6 +23,13 @@ int isName( u8 c ){
   return 0;
 }
 
+int isNumber( u8 c ){
+  if( c >= '0' && c <= '9' )
+    return 1;
+  else
+    return 0;
+}
+
 // This returns the parsed expression as a node, or NULL. If NULL is returned, error is made to point at an error message. All named indices less than or equal to global 
 // are considered global; all other indices should be bound lambdas.
 u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** error ){
@@ -200,25 +207,60 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
 	return s - string;
       }
         
-      // Handle identifiers.
+      // Handle identifiers and integers.
       while( namelen < l && isName( s[ namelen ] ) )
 	++namelen;    
 
-      u64 nind = getIndex( p->names, s, namelen );
-      if( !nind ){
-	*error = "Unknown identifier.";
-	return s - string;
+      u64 isint = 1;
+      u64 isminus = 0;
+      u64 i = 0;
+      if( s[ i ] == '-' ){
+	++i;
+	isminus = 1;
+	if( namelen == 1 )
+	  isint = 0;
       }
-      u32 pntr = getPointerFromName( p, s, namelen );
-      
-      // if global or not a lambda, treat as an identifier, otherwise a free variable.
-      if( nind <= p->global || p->heap[ pntr ].type != LNZ_LAMBDA_TYPE )
-	arg = *( ( u32* )( getName( p->pointers, nind, NULL ) ) );
-      else{
+      for( ; i < namelen; ++i )
+	if( !isNumber( s[ i ] ) )
+	  isint = 0;
+
+      if( isint ){
 	arg = mallocNode( p );
-	p->heap[ arg ].type = LNZ_FREE_TYPE;
+	u32 dn = mallocNode( p );
+	p->heap[ arg ].type = LNZ_INT_TYPE + isminus;
 	p->heap[ arg ].references = 1;
-	p->heap[ arg ].data = *( ( u32* )( getName( p->pointers, nind, NULL ) ) );
+	p->heap[ arg ].data = ( ( (u64)dn ) << 32 ) + ( (u64)dn );
+	p->heap[ dn ].type = LNZ_DATA_TYPE;
+	p->heap[ dn ].references = 1;
+	p->heap[ dn ].data = 0;
+	
+	i = 0;
+	if( s[ i ] == '-' )
+	  ++i;
+	
+	while( i < namelen && isNumber( s[ i ] ) ){
+	  multiplyNumberByInt( p, arg, 10 );
+	  addIntToNumber( p, arg, s[ i ] - '0' );
+	  ++i; 
+	}
+	
+      }else{ 
+	u64 nind = getIndex( p->names, s, namelen );
+	if( !nind ){
+	  *error = "Unknown identifier.";
+	  return s - string;
+	}
+	u32 pntr = getPointerFromName( p, s, namelen );
+	
+	// if global or not a lambda, treat as an identifier, otherwise a free variable.
+	if( nind <= p->global || p->heap[ pntr ].type != LNZ_LAMBDA_TYPE )
+	  arg = *( ( u32* )( getName( p->pointers, nind, NULL ) ) );
+	else{
+	  arg = mallocNode( p );
+	  p->heap[ arg ].type = LNZ_FREE_TYPE;
+	  p->heap[ arg ].references = 1;
+	  p->heap[ arg ].data = *( ( u32* )( getName( p->pointers, nind, NULL ) ) );
+	}
       }
     }
      
@@ -422,6 +464,21 @@ void printExpression( const LNZprogram* p, u32 expression, u32 level ){
 	--len;
       }
       putchar( '\'' );
+
+    }else if( p->heap[ expression ].type == LNZ_INT_TYPE ||
+	      p->heap[ expression ].type == LNZ_NEGATIVE_INT_TYPE ){
+      u32 back = p->heap[ expression ].data >> 32;
+      u32 len = p->heap[ back ].references;
+
+      if( p->heap[ expression ].type == LNZ_NEGATIVE_INT_TYPE &&
+	  ( len > 1 || p->heap[ back ].data ) )
+	putchar( '-' );
+      
+      u64 numlen = 0;
+      char* num = numberToString( p, expression, &numlen );
+      for( u64 i = 0; i < numlen; ++i )
+	putchar( num[ i ] );
+      LNZfree( num );
 
     }else if( p->heap[ expression ].type == LNZ_FREE_TYPE )
       printf( "l%u", (u32)p->heap[ expression ].data );

@@ -10,7 +10,7 @@ all: depend debug
 
 # Toolchain.
 CC=gcc
-CCFLAGS=-std=c11 -Wall -fno-exceptions -pedantic -Wextra -Werror -c 
+CCFLAGS=-m64 -std=c11 -Wall -fno-exceptions -Wextra -Werror -c 
 CCINCFLAG=
 LD=gcc
 LDFLAGS=
