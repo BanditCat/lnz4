@@ -168,9 +168,9 @@ void printProgram( const LNZprogram* p ){
 
 
 void printHeap( const LNZprogram* p ){
-  for( u64 i = 1; i <= p->heapsize; ++i ){
+  for( u64 i = 1; i < p->heapsize; ++i ){
     if( p->heap[ i ].type ){
-      printf( "10%u, type %u, references %u, data %u,%u\n", (u32)i, p->heap[ i ].type,  p->heap[ i ].references
+      printf( "%u, type %u, references %u, data %u,%u\n", (u32)i, p->heap[ i ].type,  p->heap[ i ].references
 	      ,(u32)( p->heap[ i ].data & ( (u64)( (u32)-1 ) ) ), (u32)( p->heap[ i ].data >> 32 ) );
     }
   }

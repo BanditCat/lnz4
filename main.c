@@ -56,6 +56,7 @@ int main( int argc, char** argv ){
     LNZfree( (char*)err );
   } else{
     printProgram( prog );
+    printProgram( eprog );
     printHeap( eprog );
   }
   if( prog != NULL )
