@@ -214,7 +214,7 @@ u32 copyExpression( LNZprogram* p, const LNZprogram* cp, u32 arg ){
     do{
       len -= stride;
       u32 next = narg;
-      if( len >= stride || ( cp->heap[ arg ].type == LNZ_STRING_TYPE && len >= 0 ) )
+      if( len >= stride || ( cp->heap[ arg ].type == LNZ_STRING_TYPE && len > 0 ) )
 	next = mallocNode( p );
       else{
 	last = next;
