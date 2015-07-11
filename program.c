@@ -252,13 +252,32 @@ void upLambda( LNZprogram* p, u32 expr ){
     upLambda( p, bdy );
   }
 }
+// This assumes refs is all 0s, it updates to correct values.
+void countRefs( LNZprogram* p ){
+  for( u64 i = 0; i < p->heapsize; ++i ){
+    if( p->heap[ i ].type ){
+      if( p->heap[ i ].type == LNZ_APPLICATION_TYPE ||
+	  p->heap[ i ].type == LNZ_LAMBDA_TYPE ){
+	u32 lo = p->heap[ i ].data;
+	u32 hi = ( p->heap[ i ].data >> 32 );
+	++( p->heap[ lo ].references );
+	++( p->heap[ hi ].references );
+      }else if( p->heap[ i ].type == LNZ_FREE_TYPE ||
+	  p->heap[ i ].type == LNZ_LAMBDA_TYPE ){
+	u32 lo = p->heap[ i ].data;
+	++( p->heap[ lo ].references );
+      }
+    }
+  }
+}
+
 LNZprogram* makeComputable( const LNZprogram* p, u32 expr ){
   LNZprogram* ans = newProgram();
   u32 e = copyExpression( ans, p, expr );
   addNamePointerPair( ans, (const u8*)"e", 1, e );
   if( ans->heap[ e ].type == LNZ_LAMBDA_TYPE )
     ans->heap[ e ].data += ( ( (u64)e ) << 32 );
-  ans->heap[ e ].references = 1;
   upLambda( ans, e );
+  countRefs( ans );
   return ans;
 }

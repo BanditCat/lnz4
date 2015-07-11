@@ -48,7 +48,7 @@ int main( int argc, char** argv ){
   u64 len;
   u8* code = LNZLoadResourceOrDie( "base.lnz", &len );
   LNZprogram* prog = parseProgram( code, len, &err );
-  const u8* eval = (const u8*)"isnil";
+  const u8* eval = (const u8*)"Y";
   LNZprogram* eprog = NULL;
   if( prog != NULL )
     eprog  = makeComputable( prog, getPointerFromName( prog, eval, strlen( (const char*)eval ) ) );
