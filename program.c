@@ -184,7 +184,8 @@ u32 copyExpression( LNZprogram* p, const LNZprogram* cp, u32 arg ){
   if( cp->heap[ arg ].type == LNZ_LAMBDA_TYPE ){
     p->heap[ nn ].references = 0;
     addNamePointerPair( p, (const u8*)( &arg ), sizeof( u32 ), nn );
-    p->heap[ nn ].data = copyExpression( p, cp, cp->heap[ arg ].data );
+    u32 se = copyExpression( p, cp, cp->heap[ arg ].data );
+    p->heap[ nn ].data = se;
     popNamePointerPair( p );
   }else if( cp->heap[ arg ].type == LNZ_APPLICATION_TYPE ){
     u32 lo = cp->heap[ arg ].data & (u64)( (u32)-1 );
@@ -233,9 +234,31 @@ u32 copyExpression( LNZprogram* p, const LNZprogram* cp, u32 arg ){
   return nn;
 }
 
+// Helper functions that makes the high order of data in lambda point upwards to its' parent.
+void upLambda( LNZprogram* p, u32 expr ){
+  if( p->heap[ expr ].type == LNZ_LAMBDA_TYPE ){
+    u32 bdy = p->heap[ expr ].data;
+    if( p->heap[ bdy ].type == LNZ_LAMBDA_TYPE )
+      p->heap[ bdy ].data += ( ( (u64)expr ) << 32 );
+    upLambda( p, bdy );
+  }else if( p->heap[ expr ].type == LNZ_APPLICATION_TYPE ){
+    u32 bdy = p->heap[ expr ].data;
+    if( p->heap[ bdy ].type == LNZ_LAMBDA_TYPE )
+      p->heap[ bdy ].data += ( ( (u64)expr ) << 32 );
+    upLambda( p, bdy );
+    bdy = ( p->heap[ expr ].data >> 32 );
+    if( p->heap[ bdy ].type == LNZ_LAMBDA_TYPE )
+      p->heap[ bdy ].data += ( ( (u64)expr ) << 32 );
+    upLambda( p, bdy );
+  }
+}
 LNZprogram* makeComputable( const LNZprogram* p, u32 expr ){
   LNZprogram* ans = newProgram();
   u32 e = copyExpression( ans, p, expr );
   addNamePointerPair( ans, (const u8*)"e", 1, e );
+  if( ans->heap[ e ].type == LNZ_LAMBDA_TYPE )
+    ans->heap[ e ].data += ( ( (u64)e ) << 32 );
+  ans->heap[ e ].references = 1;
+  upLambda( ans, e );
   return ans;
 }

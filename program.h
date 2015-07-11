@@ -33,7 +33,7 @@ typedef struct{
 #include "nameTable.h"
 #include "stack.h"
 
-#define LNZ_INITIAL_HEAP_SIZE 2
+#define LNZ_INITIAL_HEAP_SIZE 1;
 
 typedef struct{
   LNZnode* heap;
