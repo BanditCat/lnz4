@@ -31,7 +31,6 @@ LNZprogram* parseProgram( const u8* string, u64 length, const char** error );
 
 // Call with level set to 0. 
 void printExpression( const LNZprogram* p, u32 index, u32 level );
-void printProgram( const LNZprogram* p );
 
 
 // Does at least count beta-reductions, returns the actual number of reductions.

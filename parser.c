@@ -486,19 +486,3 @@ void printExpression( const LNZprogram* p, u32 expression, u32 level ){
 }
 
 
-
-void printProgram( const LNZprogram* p ){
-  for( u64 i = 1; i <= p->names->size; ++i ){
-    u64 len;
-    const u8* name = getName( p->names, i, &len );
-    for( u64 j = 0; j < len; ++j )
-      putchar( (int)name[ j ] );
-    printf( " = " );
-    u32 expr = *( (const u32*)( getName( p->pointers, i, &len  ) ) ); 
-    printExpression( p, expr, 0 );
-    printf( ";\n\n" );
-  }
-}
-
-
-

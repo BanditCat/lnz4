@@ -1,47 +1,25 @@
 
-lnz.h,1221
+lnz.h,597
 #define LNZ_H8,279
-typedef unsigned char u8;16,383
-typedef unsigned short int u16;17,409
-typedef unsigned int u32;18,441
-typedef unsigned long long int u64;19,467
-typedef signed char s8;20,503
-typedef signed short int s16;21,527
-typedef signed int s32;22,557
-typedef signed long long int s64;23,581
-typedef float f32;24,615
-typedef double f64;25,634
-#define pi 56,1730
-#define LNZ_LAMBDA_TYPE 67,2268
-#define LNZ_APPLICATION_TYPE 68,2294
-#define LNZ_FREE_TYPE 69,2325
-#define LNZ_DATA_TYPE 70,2349
-#define LNZ_BUILTIN_START 71,2373
-  u32 type;73,2420
-  u32 references;74,2432
-  u64 data;75,2450
-} LNZnode;76,2462
-#define LNZ_INITIAL_HEAP_SIZE 82,2542
-  LNZnode* heap;85,2591
-  u32 heapsize;86,2608
-  stack* frees;87,2624
-  nameTable* names;88,2640
-  nameTable* pointers;89,2660
-  u64 global;90,2683
-} LNZprogram;91,2697
-LNZprogram* newProgram(93,2712
-void deleteProgram(94,2744
-u32 mallocNode(95,2781
-void freeNode(96,2814
-void addNamePointerPair(99,2858
-void popNamePointerPair(100,2942
-u32 getPointerFromName(101,2984
-const u8* getNameFromPointer(102,3054
-void LNZdie(104,3125
-void* LNZmalloc(107,3174
-void* LNZcalloc(108,3203
-void LNZfree(109,3232
-u64 LNZmallocCount(113,3274
+typedef unsigned char u8;18,421
+typedef unsigned short int u16;19,447
+typedef unsigned int u32;20,479
+typedef unsigned long long int u64;21,505
+typedef signed char s8;22,541
+typedef signed short int s16;23,565
+typedef signed int s32;24,595
+typedef signed long long int s64;25,619
+typedef float f32;26,653
+typedef double f64;27,672
+#define pi 58,1768
+void addStringToString(63,1947
+void LNZdie(65,2028
+void* LNZmalloc(68,2077
+void* LNZcalloc(69,2106
+void LNZfree(70,2135
+u8* LNZLoadResource(75,2383
+u8* LNZLoadResourceOrDie(76,2435
+u64 LNZmallocCount(81,2508
 
 nameTable.h,637
 #define LNZ_NAMETABLE_H6,268
@@ -67,14 +45,58 @@ const u8* getName(34,1294
 void popNameTable(36,1390
 void printNameTable(39,1428
 
-parser.h,173
+parser.h,251
 #define LNZ_PARSER_H8,288
 int isWhitespace(11,410
-int isReserved(14,512
-int isName(17,618
-u32 parseExpression(21,745
-void printExpression(23,863
-u64 parseLine(26,971
+int isNumber(14,503
+int isReserved(17,601
+int isName(20,707
+u32 parseExpression(24,876
+u64 parseLine(27,1044
+LNZprogram* parseProgram(30,1193
+void printExpression(33,1302
+void reduce(37,1452
+
+pep.h,44
+static const char* pepTalks[pepTalks8,284
+
+program.h,1040
+#define LNZ_PROGRAM_H8,302
+#define LNZ_LAMBDA_TYPE 19,850
+#define LNZ_APPLICATION_TYPE 20,876
+#define LNZ_FREE_TYPE 21,907
+#define LNZ_STRING_TYPE 22,931
+#define LNZ_INT_TYPE 23,957
+#define LNZ_NEGATIVE_INT_TYPE 24,980
+#define LNZ_DATA_TYPE 25,1012
+#define LNZ_BUILTIN_START 26,1036
+  u32 type;28,1083
+  u32 references;29,1095
+  u64 data;30,1113
+} LNZnode;31,1125
+#define LNZ_INITIAL_HEAP_SIZE 36,1180
+  LNZnode* heap;39,1229
+  u32 heapsize;40,1246
+  u32 frees;41,1262
+  nameTable* names;42,1275
+  nameTable* pointers;43,1295
+  u64 global;44,1318
+} LNZprogram;45,1332
+LNZprogram* newProgram(48,1348
+void deleteProgram(49,1380
+u32 mallocNode(50,1417
+void freeNode(51,1450
+void addNamePointerPair(54,1545
+void popNamePointerPair(55,1629
+void multiplyNumberByInt(57,1672
+void addIntToNumber(58,1731
+u32 getPointerFromName(60,1786
+const u8* getNameFromPointer(61,1856
+void addStringChar(64,1996
+char* numberToString(67,2104
+LNZprogram* makeComputable(71,2359
+void printProgram(73,2421
+void printHeap(74,2463
 
 stack.h,187
 #define LNZ_STACK_H6,264
@@ -87,24 +109,17 @@ void deleteStack(16,397
 void push(17,428
 u32 pop(18,461
 
-lnz.c,394
-static u64 lnzMallocCount 10,297
-void LNZdie(13,336
-void* LNZmalloc(18,440
-void* LNZcalloc(27,607
-void LNZfree(37,778
-u32 mallocNode(44,863
-void freeNode(56,1233
-LNZprogram* newProgram(60,1298
-void deleteProgram(74,1721
-void addNamePointerPair(81,1890
-void popNamePointerPair(85,2094
-u32 getPointerFromName(89,2197
-const u8* getNameFromPointer(95,2400
-u64 LNZmallocCount(103,2624
+lnz.c,189
+static u64 lnzMallocCount 8,275
+void* LNZmalloc(12,315
+void* LNZcalloc(21,482
+void LNZfree(31,653
+u64 LNZmallocCount(39,751
+void addIntToNumber(44,816
+void addStringToString(72,1665
 
 main.c,17
-int main(12,308
+int main(11,270
 
 nameTable.c,338
 nameTable* newNameTable(8,263
@@ -120,13 +135,37 @@ void printNameTable(139,3881
 int removeName(153,4349
 void popNameTable(174,4860
 
-parser.c,149
-int isWhitespace(7,262
-int isReserved(13,344
-int isName(19,434
-u32 parseExpression(27,770
-u64 parseLine(206,4829
-void printExpression(246,5649
+os.c,115
+#define WIN32_LEAN_AND_MEAN6,284
+void LNZdie(13,354
+u8* LNZLoadResource(19,459
+u8* LNZLoadResourceOrDie(36,906
+
+parser.c,205
+int isWhitespace(8,279
+int isReserved(14,361
+int isName(20,451
+int isNumber(26,547
+u32 parseExpression(35,876
+u64 parseLine(306,7210
+LNZprogram* parseProgram(370,8606
+void printExpression(405,9426
+
+program.c,423
+u32 mallocNode(8,263
+void freeNode(27,835
+LNZprogram* newProgram(33,950
+void deleteProgram(52,1469
+void addNamePointerPair(58,1611
+void popNamePointerPair(62,1815
+u32 getPointerFromName(66,1918
+const u8* getNameFromPointer(72,2121
+char* numberToString(79,2332
+void multiplyNumberByInt(109,3017
+void addStringChar(138,3934
+void printProgram(156,4493
+void printHeap(170,4871
+LNZprogram* makeComputable(181,5204
 
 stack.c,82
 stack* newStack(7,262

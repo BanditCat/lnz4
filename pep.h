@@ -18,6 +18,8 @@ static const char* pepTalks[] = {
   "If I can write this, you can write that, for sure.",
   "Go programmer go!",
   "Probably just cosmic rays.",
-  "Just one tiny error."
+  "Just one tiny error.",
+  "Such a fine error!",
+  "You know, this is just an opportunity to learn something."
 };
 
