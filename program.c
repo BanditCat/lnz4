@@ -168,7 +168,7 @@ void printProgram( const LNZprogram* p ){
 
 
 void printHeap( const LNZprogram* p ){
-  for( u64 i = 1; i < p->heapsize; ++i ){
+  for( u64 i = 0; i < p->heapsize; ++i ){
     if( p->heap[ i ].type ){
       printf( "%u, type %u, references %u, data %u,%u\n", (u32)i, p->heap[ i ].type,  p->heap[ i ].references
 	      ,(u32)( p->heap[ i ].data & ( (u64)( (u32)-1 ) ) ), (u32)( p->heap[ i ].data >> 32 ) );
@@ -212,8 +212,9 @@ u32 copyExpression( LNZprogram* p, const LNZprogram* cp, u32 arg ){
     u64 first = narg;
     u64 last = 0;
     do{
+      len -= stride;
       u32 next = narg;
-      if( len >= stride )
+      if( len >= stride || ( cp->heap[ arg ].type == LNZ_STRING_TYPE && len >= 0 ) )
 	next = mallocNode( p );
       else{
 	last = next;
@@ -224,9 +225,9 @@ u32 copyExpression( LNZprogram* p, const LNZprogram* cp, u32 arg ){
       p->heap[ narg ].references = next;
       narg = next;
       ds = cp->heap[ ds ].references;
-    }while( ( len -= stride ) > 0 );
+    }while( len > 0 );
     p->heap[ nn ].references = 0;
-    p->heap[ nn ].data = first + ( last << 32 );
+    p->heap[ nn ].data = first + ( (u64)last << 32 );
   } 
   
   return nn;
