@@ -281,3 +281,18 @@ LNZprogram* makeComputable( const LNZprogram* p, u32 expr ){
   countRefs( ans );
   return ans;
 }
+
+
+/* void betaReduce( LNZprogram* p ){ */
+/*   for( i = 0; i < p->heapsize; ++i ){ */
+/*     if( p->heap[ i ].type ){ */
+/*       if( p->heap[ i ].type == LNZ_APPLICATION_TYPE ){ */
+/* 	u32 func = p->heap[ i ].data; */
+/* 	u32 bdy = ( p->heap[ i ].data >> 32 ); */
+/* 	if( p->heap[ func ].type == LNZ_LAMBDA_TYPE ){ */
+	  
+/* 	} */
+/*       } */
+/*     } */
+/*   } */
+/* } */
