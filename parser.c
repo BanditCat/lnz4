@@ -367,7 +367,7 @@ u64 parseLine( LNZprogram* p, const u8* string, u64 length, const char **error )
   return s - string;
 }
 
-LNZprogram* parseProgram( const u8* string, u64 length, const char** error ){
+LNZprogram* parseProgram( const char* filename, const u8* string, u64 length, const char** error ){
   LNZprogram* ans = newProgram();
   const u8* s = string;
   u64 l = length;
@@ -390,9 +390,9 @@ LNZprogram* parseProgram( const u8* string, u64 length, const char** error ){
 	  
 
       u64 pep = rand() % ( sizeof( pepTalks ) / sizeof( pepTalks[ 0 ] ) );
-      char* err = LNZmalloc( strlen( *error ) + 
+      char* err = LNZmalloc( strlen( filename ) + strlen( *error ) + 
 			     strlen( pepTalks[ pep ] ) + 256 );
-      sprintf( err, "line and character: %u,%u.\n%s\n%s\n\n", (int)line, (int)chr,
+      sprintf( err, "%s:%u:%u\n%s\n%s\n\n", filename, (int)line, (int)chr,
 	       *error, pepTalks[ pep ] );
       *error = err;
       deleteProgram( ans );

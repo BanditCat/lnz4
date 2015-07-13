@@ -27,7 +27,7 @@ u32 parseExpression( LNZprogram* p, const u8* string, u64 length, const char** e
 u64 parseLine( LNZprogram* p, const u8* string, u64 length, const char** error );
 
 // *error will be NULL on success, otherwise you must LNZfree it.
-LNZprogram* parseProgram( const u8* string, u64 length, const char** error );
+LNZprogram* parseProgram( const char* filename, const u8* string, u64 length, const char** error );
 
 // Call with level set to 0. 
 void printExpression( const LNZprogram* p, u32 index, u32 level );

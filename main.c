@@ -47,7 +47,7 @@ int main( int argc, char** argv ){
   
   u64 len;
   u8* code = LNZLoadResourceOrDie( "base.lnz", &len );
-  LNZprogram* prog = parseProgram( code, len, &err );
+  LNZprogram* prog = parseProgram( "base.lnz", code, len, &err );
   const u8* eval = (const u8*)"inc";
   LNZprogram* eprog = NULL;
   if( prog != NULL )
@@ -58,30 +58,14 @@ int main( int argc, char** argv ){
     LNZfree( (char*)err );
   } else{
     printProgram( prog );
-    printProgram( eprog );
-    printHeap( eprog );
-
-    printf( "\n\n" );
-    betaReduce( eprog );
-    printHeap( eprog );
-    printProgram( eprog );
-
-    printf( "\n\n" );
-    betaReduce( eprog );
-    printHeap( eprog );
-    printProgram( eprog );
-    printf( "\n\n" );
-    betaReduce( eprog );
-    printHeap( eprog );
-    printProgram( eprog );
-    printf( "\n\n" );
-    betaReduce( eprog );
-    printHeap( eprog );
-    printProgram( eprog );
-    printf( "\n\n" );
-    betaReduce( eprog );
-    printHeap( eprog );
-    printProgram( eprog );
+ 
+    u64 reds = 0;
+    do{
+      printf( "\n%u reductions.\n\n", (unsigned int)reds );
+      printProgram( eprog );
+      printHeap( eprog );
+      reds = betaReduce( eprog );
+    }while( reds );
     
   }
   if( prog != NULL )

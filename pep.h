@@ -20,6 +20,7 @@ static const char* pepTalks[] = {
   "Probably just cosmic rays.",
   "Just one tiny error.",
   "Such a fine error!",
-  "You know, this is just an opportunity to learn something."
+  "You know, this is just an opportunity to learn something.",
+  "I think you dropped a bracket."
 };
 

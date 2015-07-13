@@ -23,7 +23,7 @@ isnil = \x.not [iscons x];
 
 Y = \x.[\y.x [y y]] [\y.x [y y]];
 
-inc = isnil nil;
+inc =  if [isnil [cons nil false]] true false;
 
 
 
