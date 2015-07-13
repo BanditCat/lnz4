@@ -57,12 +57,12 @@ int main( int argc, char** argv ){
     printf( "%s", err );
     LNZfree( (char*)err );
   } else{
-    printProgram( prog );
+    printProgram( prog, NULL );
  
     u64 reds = 0;
     do{
       printf( "\n%u reductions.\n\n", (unsigned int)reds );
-      printProgram( eprog );
+      printProgram( eprog, prog );
       printHeap( eprog );
       reds = betaReduce( eprog );
     }while( reds );

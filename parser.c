@@ -402,11 +402,32 @@ LNZprogram* parseProgram( const char* filename, const u8* string, u64 length, co
   return ans;
 }
 
-void printExpression( const LNZprogram* p, u32 expression, u32 level ){
-  u64 ind = getIndex( p->pointers, (const u8*)( &expression ), sizeof( u32 ) ); 
-  if( level && ind ){
+
+// Returns 0 or the index of the name of the expression.
+u32 indexHelper( const LNZprogram* p, u32 expr, const LNZprogram* names ){
+  u32 ind = 0;
+  if( names == NULL )
+    return getIndex( p->pointers, (const u8*)( &expr ), sizeof( u32 ) );
+  else{
+    for( int i = names->pointers->size - 1; i >= 0; --i )
+      if( nodesEqual( p, expr, names, *( (const u32*)( names->pointers->revdict[ i ] ) ) ) ){
+	ind = i + 1;
+	break;
+      }
+  }
+  return ind;
+}
+
+void printExpression( const LNZprogram* p, u32 expression, u32 level, 
+		      const LNZprogram* names ){
+  u64 ind = indexHelper( p, expression, names );
+  if( ind && level ){
     u64 len;
-    const u8* name = getName( p->names, ind, &len );
+    const u8* name;
+    if( names != NULL )
+      name = getName( names->names, ind, &len );
+    else
+      name = getName( p->names, ind, &len );
     for( u64 i = 0; i < len; ++i )
       putchar( (int)name[ i ] );
   }else{
@@ -422,29 +443,29 @@ void printExpression( const LNZprogram* p, u32 expression, u32 level ){
 	  printf( " " );
 	else{
 	  printf( "." );
-	  printExpression( p, expression, level + 1 );
+	  printExpression( p, expression, level + 1, names );
 	}
       }
     }else if( p->heap[ expression ].type == LNZ_APPLICATION_TYPE ){
       u32 low = p->heap[ expression ].data & (u32)( -1 );
       u32 high = p->heap[ expression ].data >> 32;
-      ind = getIndex( p->pointers, (const u8*)( &high ), sizeof( u32 ) );
-      u64 lind = getIndex( p->pointers, (const u8*)( &low ), sizeof( u32 ) );
+      ind = indexHelper( p, high, names );
+      u64 lind = indexHelper( p, low, names );
       if( p->heap[ low ].type == LNZ_LAMBDA_TYPE && !lind ){ 
 	printf( "[" );
-	printExpression( p, low, level + 1 );
+	printExpression( p, low, level + 1, names );
 	printf( "]" );
       }else
-	printExpression( p, low, level + 1 );
+	printExpression( p, low, level + 1, names );
       if( ( p->heap[ high ].type == LNZ_APPLICATION_TYPE || 
 	  p->heap[ high ].type == LNZ_LAMBDA_TYPE ) && !ind ){
 
 	printf( " [" );
-	printExpression( p, high, level + 1 );
+	printExpression( p, high, level + 1, names );
 	printf( "]" );
       }else{
 	printf( " " );
-	printExpression( p, high, level + 1 );
+	printExpression( p, high, level + 1, names );
       }
     }else if( p->heap[ expression ].type == LNZ_STRING_TYPE ){
       u32 len = p->heap[ p->heap[ expression ].data >> 32 ].references;

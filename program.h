@@ -18,10 +18,17 @@
 #define LNZ_LAMBDA_TYPE 1
 #define LNZ_APPLICATION_TYPE 2
 #define LNZ_FREE_TYPE 3
+
+
+// Data types.
+#define LNZ_DATA_START 4
 #define LNZ_STRING_TYPE 4
 #define LNZ_INT_TYPE 5
 #define LNZ_NEGATIVE_INT_TYPE 6
+#define LNZ_DATA_END 6
 #define LNZ_DATA_TYPE 7
+
+
 #define LNZ_BUILTIN_START 1024
 
 typedef struct{
@@ -57,8 +64,8 @@ void popNamePointerPair( LNZprogram* p );
 void multiplyNumberByInt( LNZprogram* p, u32 arg, u64 x );
 void addIntToNumber( LNZprogram* p, u32 arg, u64 x );
 
-u32 getPointerFromName( LNZprogram* p, const u8* name, u64 namelen );
-const u8* getNameFromPointer( LNZprogram* p, u32 pointer, u64* len );
+u32 getPointerFromName( const LNZprogram* p, const u8* name, u64 namelen );
+const u8* getNameFromPointer( const LNZprogram* p, u32 pointer, u64* len );
 
 // Adds a character c to the end of the string at p->heap[ string ].
 void addStringChar( LNZprogram* p, u32 string, u8 c );
@@ -70,8 +77,14 @@ char* numberToString( const LNZprogram* p, u32 num, u64* len );
 // There is only one name, "e" and it points to the top of the expression.
 LNZprogram* makeComputable( const LNZprogram* p, u32 expr );
 
-void printProgram( const LNZprogram* p );
+// If ref is not null, then it used for names hen printing.
+void printProgram( const LNZprogram* p, const LNZprogram* ref );
+
 void printHeap( const LNZprogram* p );
+
+// Returns 0 unless arg1 and arg2 point to identical expressions. 
+int nodesEqual( const LNZprogram* p1, u32 arg1,
+		const LNZprogram* p2, u32 arg2 );
 
 
 // Returns number of beta reductions performed.

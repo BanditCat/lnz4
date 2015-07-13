@@ -63,13 +63,13 @@ void popNamePointerPair( LNZprogram* p ){
   popNameTable( p->names );
   popNameTable( p->pointers );
 }
-u32 getPointerFromName( LNZprogram* p, const u8* name, u64 namelen ){
+u32 getPointerFromName( const LNZprogram* p, const u8* name, u64 namelen ){
   u64 i = getIndex( p->names, name, namelen );
   if( !i )
     return 0;
   return *( (const u32*)getName( p->pointers, i, NULL ) );
 }
-const u8* getNameFromPointer( LNZprogram* p, u32 pointer, u64* len ){
+const u8* getNameFromPointer( const LNZprogram* p, u32 pointer, u64* len ){
   u64 i = getIndex( p->names, (const u8*)( &pointer ), sizeof( u32 ) );
   if( !i )
     return NULL;
@@ -153,7 +153,7 @@ void addStringChar( LNZprogram* p, u32 string, u8 c ){
 }
 
 
-void printProgram( const LNZprogram* p ){
+void printProgram( const LNZprogram* p, const LNZprogram* ref ){
   for( u64 i = 1; i <= p->names->size; ++i ){
     u64 len;
     const u8* name = getName( p->names, i, &len );
@@ -161,7 +161,7 @@ void printProgram( const LNZprogram* p ){
       putchar( (int)name[ j ] );
     printf( " = " );
     u32 expr = *( (const u32*)( getName( p->pointers, i, &len  ) ) ); 
-    printExpression( p, expr, 0 );
+    printExpression( p, expr, 0, ref );
     printf( ";\n\n" );
   }
 }
@@ -410,6 +410,72 @@ void decref( LNZprogram* p, u32 arg ){
   }
 }
 
+// Checks whether 2 data types are equal.
+int dataEqual( const LNZprogram* p1, u32 arg1,
+		const LNZprogram* p2, u32 arg2 ){
+  if( p1->heap[ arg1 ].type != p2->heap[ arg2 ].type )
+    return 0;
+  s64 len = p1->heap[ p1->heap[ arg1 ].data >> 32 ].references;
+  if( len != p2->heap[ p2->heap[ arg2 ].data >> 32 ].references )
+    return 0;
+  
+  u32 d1 = p1->heap[ arg1 ].data;
+  u32 d2 = p2->heap[ arg2 ].data;
+ 
+  s64 stride;
+  if( p1->heap[ arg1 ].type == LNZ_STRING_TYPE )
+    stride = 8;
+  else
+    stride = 1;
+
+  do{
+    u64 data1 = p1->heap[ d1 ].data;
+    u64 data2 = p2->heap[ d2 ].data;
+    if( p1->heap[ arg1 ].type == LNZ_STRING_TYPE && len < 8 ){
+      __int128 mask = ( (__int128)1 << (__int128)( len * 8 ) );
+      mask -= 1;
+      data1 &= mask;
+      data2 &= mask;
+    }
+    if( data1 != data2 )
+      return 0;
+    
+    d1 = p1->heap[ d1 ].references;
+    d2 = p2->heap[ d2 ].references;
+    len -= stride;
+  }while( len > 0 ); 
+  return 1;
+}
+
+int nodesEqual( const LNZprogram* p1, u32 arg1,
+		const LNZprogram* p2, u32 arg2 ){
+  if( p1 == p2 && arg1 == arg2 )
+    return 1;
+  if( p1->heap[ arg1 ].type != p2->heap[ arg2 ].type )
+    return 0;
+  if( p1->heap[ arg1 ].type == LNZ_LAMBDA_TYPE ){
+    addNamePointerPair( (LNZprogram*)p1, (const u8*)( &arg2 ), sizeof( u32 ), arg1 );
+    int ans = nodesEqual( p1, p1->heap[ arg1 ].data,
+			  p2, p2->heap[ arg2 ].data );
+    popNamePointerPair( (LNZprogram*)p1 );
+    return ans;
+  }else if( p1->heap[ arg1 ].type == LNZ_APPLICATION_TYPE )
+    return ( nodesEqual( p1, p1->heap[ arg1 ].data,
+			 p2, p2->heap[ arg2 ].data ) &&
+	     nodesEqual( p1, p1->heap[ arg1 ].data >> 32,
+			 p2, p2->heap[ arg2 ].data >> 32 ) );
+  else if( p1->heap[ arg1 ].type == LNZ_FREE_TYPE ){
+    u32 wl = p2->heap[ arg2 ].data;
+    return getPointerFromName( p1, (const u8*)( &wl ), sizeof( u32 ) ) == 
+      p1->heap[ arg1 ].data;
+  }else if( p1->heap[ arg1 ].type >= LNZ_DATA_START &&
+	    p1->heap[ arg1 ].type <= LNZ_DATA_END ){
+    return dataEqual( p1, arg1, p2, arg2 );
+  }
+  return 0;
+}
+
+
 void copyNode( LNZprogram* p, u32 dest, u32 src ){
   p->heap[ dest ].type = p->heap[ src ].type;
   p->heap[ dest ].data = p->heap[ src ].data;
@@ -434,7 +500,8 @@ u64 betaReduce( LNZprogram* p ){
 	  u32 bdy = p->heap[ func ].data;
 	  if( p->heap[ bdy ].type == LNZ_FREE_TYPE ){
 	    if( p->heap[ bdy ].data == func ){
-	      if( p->heap[ arg ].type != LNZ_LAMBDA_TYPE )
+	      if( p->heap[ arg ].type == LNZ_APPLICATION_TYPE || 
+		  p->heap[ arg ].type == LNZ_FREE_TYPE   )
 		copyNode( p, i, arg );
 	      else
 		copyExpression( p, 1, i, p, bdy, 1, func, arg ); 

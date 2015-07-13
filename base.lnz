@@ -23,7 +23,7 @@ isnil = \x.not [iscons x];
 
 Y = \x.[\y.x [y y]] [\y.x [y y]];
 
-inc =  if [isnil [cons nil false]] true false;
+inc =  if [isnil nil] [aNumber 1] 22222222222222222222222;
 
 
 
