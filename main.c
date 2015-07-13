@@ -48,7 +48,7 @@ int main( int argc, char** argv ){
   u64 len;
   u8* code = LNZLoadResourceOrDie( "base.lnz", &len );
   LNZprogram* prog = parseProgram( code, len, &err );
-  const u8* eval = (const u8*)"Y";
+  const u8* eval = (const u8*)"inc";
   LNZprogram* eprog = NULL;
   if( prog != NULL )
     eprog  = makeComputable( prog, getPointerFromName( prog, eval, strlen( (const char*)eval ) ) );
@@ -66,6 +66,18 @@ int main( int argc, char** argv ){
     printHeap( eprog );
     printProgram( eprog );
 
+    printf( "\n\n" );
+    betaReduce( eprog );
+    printHeap( eprog );
+    printProgram( eprog );
+    printf( "\n\n" );
+    betaReduce( eprog );
+    printHeap( eprog );
+    printProgram( eprog );
+    printf( "\n\n" );
+    betaReduce( eprog );
+    printHeap( eprog );
+    printProgram( eprog );
     printf( "\n\n" );
     betaReduce( eprog );
     printHeap( eprog );
