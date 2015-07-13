@@ -14,7 +14,6 @@
 //free variable (2-32 bits) lambda(32-bit pointer)
 //data (3-32 bits) data(64-bit data) 
 //builtin function ( 1024 + function number ) arg1(32-bit pointer) arg2(32-bit pointer)
-
 // 0 is reserved to indicate free space. Free space is a linked list.
 #define LNZ_LAMBDA_TYPE 1
 #define LNZ_APPLICATION_TYPE 2
@@ -24,6 +23,7 @@
 #define LNZ_NEGATIVE_INT_TYPE 6
 #define LNZ_DATA_TYPE 7
 #define LNZ_BUILTIN_START 1024
+
 typedef struct{
   u32 type;
   u32 references;
@@ -72,5 +72,9 @@ LNZprogram* makeComputable( const LNZprogram* p, u32 expr );
 
 void printProgram( const LNZprogram* p );
 void printHeap( const LNZprogram* p );
+
+
+// Returns number of beta reductions performed.
+u64 betaReduce( LNZprogram* p );
 
 #endif //LNZ_PROGRAM_H

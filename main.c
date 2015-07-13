@@ -60,6 +60,17 @@ int main( int argc, char** argv ){
     printProgram( prog );
     printProgram( eprog );
     printHeap( eprog );
+
+    printf( "\n\n" );
+    betaReduce( eprog );
+    printHeap( eprog );
+    printProgram( eprog );
+
+    printf( "\n\n" );
+    betaReduce( eprog );
+    printHeap( eprog );
+    printProgram( eprog );
+    
   }
   if( prog != NULL )
     deleteProgram( prog );

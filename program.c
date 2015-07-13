@@ -6,7 +6,7 @@
 
 
 u32 mallocNode( LNZprogram* p ){
-  if( !p->heap[ p->frees ].data ){
+  if( p->heap[ p->frees ].data == p->frees ){
     LNZnode* nh = LNZcalloc( sizeof( LNZnode ) * p->heapsize * 2 );
     memcpy( nh, p->heap, sizeof( LNZnode ) * p->heapsize );
     LNZfree( p->heap );
@@ -15,7 +15,7 @@ u32 mallocNode( LNZprogram* p ){
       p->heap[ i ].type = 0;
       p->heap[ i ].data = i + 1;
       if( i + 1 == p->heapsize * 2 )
-	p->heap[ i ].data = 0;
+	p->heap[ i ].data = i;
     }
     p->heap[ p->frees ].data = p->heapsize;
     p->heapsize *= 2;
@@ -40,7 +40,7 @@ LNZprogram* newProgram( void ){
     ans->heap[ i ].type = 0;
     ans->heap[ i ].data = i + 1;
     if( i + 1 == ans->heapsize )
-      ans->heap[ i ].data = 0;
+      ans->heap[ i ].data = i;
   }
   ans->frees = 0;
 
@@ -177,26 +177,37 @@ void printHeap( const LNZprogram* p ){
 }
 
 
-// Sets all reference counts to 0.
-u32 copyExpression( LNZprogram* p, const LNZprogram* cp, u32 arg ){
-  u32 nn = mallocNode( p );
+// Sets all reference counts to 1. if replace not 0, replace free variables of func 
+// with repl
+u32 copyExpression( LNZprogram* p, int overwrite, u32 copyto,
+		    const LNZprogram* cp, u32 arg,
+		    int replace, u32 func, u32 repl ){
+  u32 nn;
+  if( overwrite )
+    nn = copyto;
+  else
+    nn = mallocNode( p );
+
   p->heap[ nn ].type = cp->heap[ arg ].type;
+  if( !overwrite )
+    p->heap[ nn ].references = 1;
   if( cp->heap[ arg ].type == LNZ_LAMBDA_TYPE ){
-    p->heap[ nn ].references = 0;
+    p->heap[ nn ].references = 1;
     addNamePointerPair( p, (const u8*)( &arg ), sizeof( u32 ), nn );
-    u32 se = copyExpression( p, cp, cp->heap[ arg ].data );
+    u32 se = copyExpression( p, 0, 0, cp, cp->heap[ arg ].data, replace, func, repl );
     p->heap[ nn ].data = se;
     popNamePointerPair( p );
   }else if( cp->heap[ arg ].type == LNZ_APPLICATION_TYPE ){
     u32 lo = cp->heap[ arg ].data & (u64)( (u32)-1 );
     u32 hi = cp->heap[ arg ].data >> 32;
-    lo = copyExpression( p, cp, lo );
-    hi = copyExpression( p, cp, hi );
-    p->heap[ nn ].references = 0;
+    lo = copyExpression( p, 0, 0, cp, lo, replace, func, repl  );
+    hi = copyExpression( p, 0, 0, cp, hi, replace, func, repl  );
     p->heap[ nn ].data = (u64)lo + ( ( (u64)hi ) << 32 );
   }else if( cp->heap[ arg ].type == LNZ_FREE_TYPE ){
-    p->heap[ nn ].references = 0;
-    p->heap[ nn ].data = getPointerFromName( p, (const u8*)( &( cp->heap[ arg ].data ) ), sizeof( u32 ) );
+    if( replace && cp->heap[ arg ].data == func ){
+      copyExpression( p, 1, nn, cp, repl, 0, 0, 0 ); 
+    }else
+      p->heap[ nn ].data = getPointerFromName( p, (const u8*)( &( cp->heap[ arg ].data ) ), sizeof( u32 ) );
   }else if( cp->heap[ arg ].type == LNZ_INT_TYPE || 
 	    cp->heap[ arg ].type == LNZ_NEGATIVE_INT_TYPE || 
 	    cp->heap[ arg ].type == LNZ_STRING_TYPE ){
@@ -208,7 +219,6 @@ u32 copyExpression( LNZprogram* p, const LNZprogram* cp, u32 arg ){
       stride = 8;
     else
       stride = 1;
-    p->heap[ nn ].references = 0;
     u32 narg = mallocNode( p );
     u64 first = narg;
     u64 last = 0;
@@ -227,43 +237,81 @@ u32 copyExpression( LNZprogram* p, const LNZprogram* cp, u32 arg ){
       narg = next;
       ds = cp->heap[ ds ].references;
     }while( len > 0 );
-    p->heap[ nn ].references = 0;
     p->heap[ nn ].data = first + ( (u64)last << 32 );
   } 
   
   return nn;
 }
 
-// Helper functions that makes the high order of data in lambda point upwards to its' parent.
-void upLambda( LNZprogram* p, u32 expr ){
+/* // Helper functions that makes the high order of data in lambda point upwards to its' parent. */
+/* void upLambda( LNZprogram* p, u32 expr ){ */
+/*   if( p->heap[ expr ].type == LNZ_LAMBDA_TYPE ){ */
+/*     u32 bdy = p->heap[ expr ].data; */
+/*     if( p->heap[ bdy ].type == LNZ_LAMBDA_TYPE ) */
+/*       p->heap[ bdy ].data += ( ( (u64)expr ) << 32 ); */
+/*     upLambda( p, bdy ); */
+/*   }else if( p->heap[ expr ].type == LNZ_APPLICATION_TYPE ){ */
+/*     u32 bdy = p->heap[ expr ].data; */
+/*     if( p->heap[ bdy ].type == LNZ_LAMBDA_TYPE ) */
+/*       p->heap[ bdy ].data += ( ( (u64)expr ) << 32 ); */
+/*     upLambda( p, bdy ); */
+/*     bdy = ( p->heap[ expr ].data >> 32 ); */
+/*     if( p->heap[ bdy ].type == LNZ_LAMBDA_TYPE ) */
+/*       p->heap[ bdy ].data += ( ( (u64)expr ) << 32 ); */
+/*     upLambda( p, bdy ); */
+/*   } */
+/* } */
+// Helper functions that makes the high order of data in lambda point at itself.
+void reLambda( LNZprogram* p, u32 expr ){
   if( p->heap[ expr ].type == LNZ_LAMBDA_TYPE ){
     u32 bdy = p->heap[ expr ].data;
-    if( p->heap[ bdy ].type == LNZ_LAMBDA_TYPE )
-      p->heap[ bdy ].data += ( ( (u64)expr ) << 32 );
-    upLambda( p, bdy );
+    u64 nd = ( (u32)( p->heap[ expr ].data ) );
+    nd += ( ( (u64)expr ) << 32 );
+    p->heap[ expr ].data = nd;
+    reLambda( p, bdy );
   }else if( p->heap[ expr ].type == LNZ_APPLICATION_TYPE ){
     u32 bdy = p->heap[ expr ].data;
-    if( p->heap[ bdy ].type == LNZ_LAMBDA_TYPE )
-      p->heap[ bdy ].data += ( ( (u64)expr ) << 32 );
-    upLambda( p, bdy );
+    reLambda( p, bdy );
     bdy = ( p->heap[ expr ].data >> 32 );
-    if( p->heap[ bdy ].type == LNZ_LAMBDA_TYPE )
-      p->heap[ bdy ].data += ( ( (u64)expr ) << 32 );
-    upLambda( p, bdy );
+    reLambda( p, bdy );
+  }
+}
+// Helper functions that makes the high order of data in lambda point at linked list
+// of all free varoables for that lambda. The links are stored in the high order
+// word of the free varoables data and the last element points at itself.
+void downLambda( LNZprogram* p, u32 expr ){
+  if( p->heap[ expr ].type == LNZ_LAMBDA_TYPE ){
+    u32 bdy = p->heap[ expr ].data;
+    downLambda( p, bdy );
+  }else if( p->heap[ expr ].type == LNZ_APPLICATION_TYPE ){
+    u32 bdy = p->heap[ expr ].data;
+    downLambda( p, bdy );
+    bdy = ( p->heap[ expr ].data >> 32 );
+    downLambda( p, bdy );
+  }else if( p->heap[ expr ].type == LNZ_FREE_TYPE ){
+    u64 ul = ( (u32)( p->heap[ expr ].data ) );
+    u64 dl = p->heap[ ul ].data >> 32;
+    if( dl == ul ){
+      p->heap[ expr ].data = ul + ( ( (u64)expr ) << 32 );
+      p->heap[ ul ].data = ( (u64)( (u32)p->heap[ ul ].data ) )
+	+ ( ( (u64)expr ) << 32 );
+    }else{
+      p->heap[ expr ].data = ul + ( dl << 32 );
+      p->heap[ ul ].data = ( (u64)( (u32)p->heap[ ul ].data ) )
+	+ ( ( (u64)expr ) << 32 );
+    }
   }
 }
 // This assumes refs is all 0s, it updates to correct values.
 void countRefs( LNZprogram* p ){
   for( u64 i = 0; i < p->heapsize; ++i ){
     if( p->heap[ i ].type ){
-      if( p->heap[ i ].type == LNZ_APPLICATION_TYPE ||
-	  p->heap[ i ].type == LNZ_LAMBDA_TYPE ){
+      if( p->heap[ i ].type == LNZ_APPLICATION_TYPE ){
 	u32 lo = p->heap[ i ].data;
 	u32 hi = ( p->heap[ i ].data >> 32 );
 	++( p->heap[ lo ].references );
 	++( p->heap[ hi ].references );
-      }else if( p->heap[ i ].type == LNZ_FREE_TYPE ||
-	  p->heap[ i ].type == LNZ_LAMBDA_TYPE ){
+      }else if( p->heap[ i ].type == LNZ_LAMBDA_TYPE ){
 	u32 lo = p->heap[ i ].data;
 	++( p->heap[ lo ].references );
       }
@@ -273,26 +321,71 @@ void countRefs( LNZprogram* p ){
 
 LNZprogram* makeComputable( const LNZprogram* p, u32 expr ){
   LNZprogram* ans = newProgram();
-  u32 e = copyExpression( ans, p, expr );
+  u32 e = copyExpression( ans, 0, 0, p, expr, 0, 0, 0 );
   addNamePointerPair( ans, (const u8*)"e", 1, e );
-  if( ans->heap[ e ].type == LNZ_LAMBDA_TYPE )
-    ans->heap[ e ].data += ( ( (u64)e ) << 32 );
-  upLambda( ans, e );
-  countRefs( ans );
+  /* if( ans->heap[ e ].type == LNZ_LAMBDA_TYPE ) */
+  /*   ans->heap[ e ].data += ( ( (u64)e ) << 32 ); */
+  /* //reLambda( ans, e ); */
+  /* downLambda( ans, e ); */
+  /* countRefs( ans ); */
+  /* ++( ans->heap[ e ].references ); */
   return ans;
 }
 
+// Recursively decrease reference count.
+void decref( LNZprogram* p, u32 arg ){
+  if( p->heap[ arg ].type ){
+    if( !( --( p->heap[ arg ].references ) ) ){
+      if( p->heap[ arg ].type == LNZ_APPLICATION_TYPE ){
+	u32 lo = p->heap[ arg ].data;
+	u32 hi = ( p->heap[ arg ].data >> 32 );
+	freeNode( p, arg );
+	decref( p, lo );
+	decref( p, hi );
+      }else if( p->heap[ arg ].type == LNZ_LAMBDA_TYPE ){
+	u32 lo = p->heap[ arg ].data;
+	freeNode( p, arg );
+	decref( p, lo );
+      }else if( p->heap[ arg ].type == LNZ_FREE_TYPE ){
+	freeNode( p, arg );
+      }else if( p->heap[ arg ].type == LNZ_INT_TYPE || 
+		p->heap[ arg ].type == LNZ_NEGATIVE_INT_TYPE || 
+		p->heap[ arg ].type == LNZ_STRING_TYPE ){
+	s64 len = p->heap[ p->heap[ arg ].data >> 32 ].references;
+	u32 ds = p->heap[ arg ].data & (u64)( (u32)-1 );
+	s64 stride;
+	if( p->heap[ arg ].type == LNZ_STRING_TYPE )
+	  stride = 8;
+	else
+	  stride = 1;
+	do{
+	  len -= stride;
+	  freeNode( p, ds );
+	  ds = p->heap[ ds ].references;
+	}while( len > 0 );
+	freeNode( p, arg );
+      }
+    }
+  }
+}
 
-/* void betaReduce( LNZprogram* p ){ */
-/*   for( i = 0; i < p->heapsize; ++i ){ */
-/*     if( p->heap[ i ].type ){ */
-/*       if( p->heap[ i ].type == LNZ_APPLICATION_TYPE ){ */
-/* 	u32 func = p->heap[ i ].data; */
-/* 	u32 bdy = ( p->heap[ i ].data >> 32 ); */
-/* 	if( p->heap[ func ].type == LNZ_LAMBDA_TYPE ){ */
-	  
-/* 	} */
-/*       } */
-/*     } */
-/*   } */
-/* } */
+
+u64 betaReduce( LNZprogram* p ){
+  u64 reds = 0;
+  u64 len = p->heapsize;
+  for( u64 i = 0; i < len; ++i ){
+    if( p->heap[ i ].type ){
+      if( p->heap[ i ].type == LNZ_APPLICATION_TYPE ){
+	u32 func = p->heap[ i ].data;
+	u32 arg = ( p->heap[ i ].data >> 32 );
+	if( p->heap[ func ].type == LNZ_LAMBDA_TYPE ){
+	  ++reds;
+	  copyExpression( p, 1, i, p, p->heap[ func ].data, 1, func, arg ); 
+	  decref( p, func );
+	  decref( p, arg );
+	}
+      }
+    }
+  }
+  return reds;
+}
