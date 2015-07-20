@@ -60,13 +60,18 @@ int main( int argc, char** argv ){
     printProgram( prog, NULL );
  
     u64 reds = 0;
+    u64 red = 0;
     do{
-      printf( "\n%u reductions.\n\n", (unsigned int)reds );
-      printProgram( eprog, prog );
+      if( !( reds % 10 ) ){
+	printf( "\n%u reductions.\n\n", (unsigned int)reds );
+	printProgram( eprog, prog );
+      }
       //  printHeap( eprog );
-      reds = betaReduce( eprog );
-    }while( reds );
-    
+       red = betaReduceNormalOrder( eprog, getPointerFromName( eprog, (const u8*)"e", 1 ) );
+       reds += red;
+    }while( red );
+    printf( "\n%u reductions.\n\n", (unsigned int)reds );
+    printProgram( eprog, prog );
   }
   if( prog != NULL )
     deleteProgram( prog );

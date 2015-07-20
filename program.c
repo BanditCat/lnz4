@@ -499,10 +499,32 @@ u64 betaReduce( LNZprogram* p ){
 	  copyExpression( p, 1, i, p, bdy, 1, func, arg ); 
 	  decref( p, func );
 	  decref( p, arg );
-	  //break;
+	  break;
 	}
       }
     }
   }
   return reds;
+}
+
+int betaReduceNormalOrder( LNZprogram* p, u32 ind ){
+  if( p->heap[ ind ].type == LNZ_APPLICATION_TYPE ){
+    u32 func = p->heap[ ind ].data;
+    u32 arg = ( p->heap[ ind ].data >> 32 );
+    if( p->heap[ func ].type == LNZ_LAMBDA_TYPE ){
+      u32 bdy = p->heap[ func ].data;
+      copyExpression( p, 1, ind, p, bdy, 1, func, arg ); 
+      decref( p, func );
+      decref( p, arg );
+      return 1;
+    }else{
+      if( betaReduceNormalOrder( p, func ) )
+	return 1;
+      return betaReduceNormalOrder( p, arg );
+    }
+  }else if( p->heap[ ind ].type == LNZ_LAMBDA_TYPE ){
+    u32 bdy = p->heap[ ind ].data;
+    return betaReduceNormalOrder( p, bdy );
+  }
+  return 0;
 }

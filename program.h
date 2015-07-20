@@ -87,7 +87,9 @@ int nodesEqual( const LNZprogram* p1, u32 arg1,
 		const LNZprogram* p2, u32 arg2 );
 
 
-// Returns number of beta reductions performed.
+// Returns number of beta reductions performed. non-determinstic.
 u64 betaReduce( LNZprogram* p );
+
+int betaReduceNormalOrder( LNZprogram* p, u32 ind );
 
 #endif //LNZ_PROGRAM_H

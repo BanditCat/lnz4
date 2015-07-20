@@ -3,6 +3,11 @@ false = \x.nil;
 
 true = \x y.x;
 
+one = \f x.f x;
+two = \f x.f [f x];
+
+
+
 aNumber = \x.100000000000000000000000000000000000000000000000000000000000000000000000000000000 '12345678901234567890123456789012345678901234567890';
 
 if = \bool then else.bool then else;
@@ -21,15 +26,22 @@ not = \x.x false true;
 
 isnil = \x.not [iscons x];
 
-Y = \x.[\y.x [y y]] [\y.x [y y]];
+Y = \x.[\y.y y] [\y.x [y y]];
+Yp = \x.[\y.x [y y]] [\y.x [y y]];
 
-incr =  \y x.if [isnil x] 
+theta =  [\x. \y. [y [x x y]]] [\x. \y. [y [x x y]]];
+thetacbv =  [\x y.y [\z. x x y z]] [\x y.y [\z. x x y z]];
+
+
+
+incnr =  \y x.if [isnil x] 
        	       [cons true nil]
 	       [if [head x]
 	           [cons false [y [tail x]]]
 		   [cons true [tail x]]];
 
-inc = [Y incr] [cons true nil];
+incr = Yp incnr;
 
+inc = incr [incr[ incr[ incr [incr nil]]]];
 
 
