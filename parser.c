@@ -337,8 +337,25 @@ u64 parseLine( LNZprogram* p, const u8* string, u64 length, const char **error )
   
   // scan for semicolon.
   u64 exprlen = 0;
-  while( exprlen < l && s[ exprlen ] != ';' )
+  int qm = 0;
+  u64 bsc = 0;
+  while( exprlen < l ){
+    if( s[ exprlen ] == '\\' )
+      ++bsc;
+    else if( s[ exprlen ] == '\'' ){
+      if( !( bsc % 2 ) && qm )
+	qm = 0;
+      else if( !( bsc % 2 ) && !qm )
+	qm = 1;
+      bsc = 0;
+    }else{    
+      bsc = 0;
+      if( !qm && s[ exprlen ] == ';' )
+	break;
+    }
     ++exprlen;
+  }
+
   if( !exprlen || exprlen == l ){
     *error = "Syntax error: malformed equation, expected an expression and a ;.";
     return s - string;

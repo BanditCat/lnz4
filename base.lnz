@@ -7,7 +7,7 @@ aNumber = \x.1000000000000000000000000000000000000000000000000000000000000000000
 
 if = \bool then else.bool then else;
 
-aString = \x.['1234578\'\]\']\\\\\\9\\\\0\\12345\'\\\\' x];
+aString = \x.['1234578\'\]\'];\\\\\\9\\\\0\\12345\'\\\\' x];
 
 cons = \h t.[\x.x h t];
 
@@ -23,10 +23,13 @@ isnil = \x.not [iscons x];
 
 Y = \x.[\y.x [y y]] [\y.x [y y]];
 
-inc =  if [isnil nil] [aNumber 1] 22222222222222222222222;
+incr =  \y x.if [isnil x] 
+       	       [cons true nil]
+	       [if [head x]
+	           [cons false [y [tail x]]]
+		   [cons true [tail x]]];
 
-
-
+inc = [Y incr] [cons true nil];
 
 
 

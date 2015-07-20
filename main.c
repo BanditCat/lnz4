@@ -63,7 +63,7 @@ int main( int argc, char** argv ){
     do{
       printf( "\n%u reductions.\n\n", (unsigned int)reds );
       printProgram( eprog, prog );
-      printHeap( eprog );
+      //  printHeap( eprog );
       reds = betaReduce( eprog );
     }while( reds );
     

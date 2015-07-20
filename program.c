@@ -214,10 +214,10 @@ u32 copyData( LNZprogram* p, const LNZprogram* cp, u32 arg ){
 u32 copyExpression( LNZprogram* p, int overwrite, u32 copyto,
 		    const LNZprogram* cp, u32 arg,
 		    int replace, u32 func, u32 repl ){
-  if( !overwrite && !replace && cp == p && p->names->size == 1 ){
-    ++( p->heap[ arg ].references );
-    return arg;
-  }else{
+  /* if( !overwrite && !replace && cp == p && p->names->size == 1 ){ */
+  /*   ++( p->heap[ arg ].references ); */
+  /*   return arg; */
+  /* }else */{
     u32 nn;
     if( overwrite )
       nn = copyto;
@@ -232,35 +232,42 @@ u32 copyExpression( LNZprogram* p, int overwrite, u32 copyto,
       u32 bdy = cp->heap[ arg ].data;
       addNamePointerPair( p, (const u8*)( &arg ), sizeof( u32 ), nn );
       u32 se;
-      if( replace && p->heap[ bdy ].type == LNZ_FREE_TYPE &&
-	  p->heap[ bdy ].data == func ){
-	++( p->heap[ repl ].references );
-	se = repl;
-      }else
-	se = copyExpression( p, 0, 0, cp, bdy, replace, func, repl );
+      /* if( replace && p->heap[ bdy ].type == LNZ_FREE_TYPE && */
+      /* 	  p->heap[ bdy ].data == func ){ */
+      /* 	++( p->heap[ repl ].references ); */
+      /* 	se = repl; */
+      /* }else */
+      se = copyExpression( p, 0, 0, cp, bdy, replace, func, repl );
       p->heap[ nn ].data = se;
       popNamePointerPair( p );
     }else if( cp->heap[ arg ].type == LNZ_APPLICATION_TYPE ){
       u32 lo = cp->heap[ arg ].data & (u64)( (u32)-1 );
       u32 hi = cp->heap[ arg ].data >> 32;
-      if( replace && p->heap[ lo ].type == LNZ_FREE_TYPE &&
-	  p->heap[ lo ].data == func ){
-	++( p->heap[ repl ].references );
-	lo = repl;
-      }else
+      /* if( replace && p->heap[ lo ].type == LNZ_FREE_TYPE && */
+      /* 	  p->heap[ lo ].data == func ){ */
+      /* 	++( p->heap[ repl ].references ); */
+      /* 	lo = repl; */
+      /* }else */
 	lo = copyExpression( p, 0, 0, cp, lo, replace, func, repl );
-      if( replace && p->heap[ hi ].type == LNZ_FREE_TYPE &&
-	  p->heap[ hi ].data == func ){
-	++( p->heap[ repl ].references );
-	hi = repl;
-      }else
+      /* if( replace && p->heap[ hi ].type == LNZ_FREE_TYPE && */
+      /* 	  p->heap[ hi ].data == func ){ */
+      /* 	++( p->heap[ repl ].references ); */
+      /* 	hi = repl; */
+      /* }else */
 	hi = copyExpression( p, 0, 0, cp, hi, replace, func, repl );
       p->heap[ nn ].data = (u64)lo + ( ( (u64)hi ) << 32 );
     }else if( cp->heap[ arg ].type == LNZ_FREE_TYPE ){
       if( replace && cp->heap[ arg ].data == func ){
        	copyExpression( p, 1, nn, cp, repl, 0, 0, 0 ); 
-      }else
-	p->heap[ nn ].data = getPointerFromName( p, (const u8*)( &( cp->heap[ arg ].data ) ), sizeof( u32 ) );
+      }else{
+	u32 wind = getIndex( p->names, (const u8*)( &( cp->heap[ arg ].data ) ), sizeof( u32 ) );
+	u32 ti;
+	if( wind )
+	  ti = *( (const u32*)p->pointers->revdict[ wind - 1 ] );
+	else
+	  ti = cp->heap[ arg ].data;
+	p->heap[ nn ].data = ti;
+      }
     }else if( cp->heap[ arg ].type == LNZ_INT_TYPE || 
 	      cp->heap[ arg ].type == LNZ_NEGATIVE_INT_TYPE || 
 	      cp->heap[ arg ].type == LNZ_STRING_TYPE ){
@@ -279,7 +286,6 @@ u32 copyExpression( LNZprogram* p, int overwrite, u32 copyto,
 	  return copyData( p, cp, arg );
       }
     } 
-    
     return nn;
   }
 }
@@ -413,8 +419,11 @@ void decref( LNZprogram* p, u32 arg ){
 // Checks whether 2 data types are equal.
 int dataEqual( const LNZprogram* p1, u32 arg1,
 		const LNZprogram* p2, u32 arg2 ){
+
   if( p1->heap[ arg1 ].type != p2->heap[ arg2 ].type )
     return 0;
+  if( p1->heap[ arg1 ].data == p2->heap[ arg2 ].data )
+    return 1;
   s64 len = p1->heap[ p1->heap[ arg1 ].data >> 32 ].references;
   if( len != p2->heap[ p2->heap[ arg2 ].data >> 32 ].references )
     return 0;
@@ -476,17 +485,6 @@ int nodesEqual( const LNZprogram* p1, u32 arg1,
 }
 
 
-void copyNode( LNZprogram* p, u32 dest, u32 src ){
-  p->heap[ dest ].type = p->heap[ src ].type;
-  p->heap[ dest ].data = p->heap[ src ].data;
-  if( p->heap[ src ].type == LNZ_APPLICATION_TYPE ){
-    ++( p->heap[ (u32)( p->heap[ src ].data ) ].references );
-    ++( p->heap[ p->heap[ src ].data >> 32 ].references );
-  }else if( p->heap[ src ].type == LNZ_LAMBDA_TYPE ){
-    ++( p->heap[ (u32)( p->heap[ src ].data ) ].references );
-  }
-}
-
 u64 betaReduce( LNZprogram* p ){
   u64 reds = 0;
   u64 len = p->heapsize;
@@ -498,19 +496,10 @@ u64 betaReduce( LNZprogram* p ){
 	if( p->heap[ func ].type == LNZ_LAMBDA_TYPE ){
 	  ++reds;
 	  u32 bdy = p->heap[ func ].data;
-	  if( p->heap[ bdy ].type == LNZ_FREE_TYPE ){
-	    if( p->heap[ bdy ].data == func ){
-	      if( p->heap[ arg ].type == LNZ_APPLICATION_TYPE || 
-		  p->heap[ arg ].type == LNZ_FREE_TYPE   )
-		copyNode( p, i, arg );
-	      else
-		copyExpression( p, 1, i, p, bdy, 1, func, arg ); 
-	    }else
-	      copyNode( p, i, bdy );
-	   } else
-	    copyExpression( p, 1, i, p, bdy, 1, func, arg ); 
+	  copyExpression( p, 1, i, p, bdy, 1, func, arg ); 
 	  decref( p, func );
 	  decref( p, arg );
+	  //break;
 	}
       }
     }
