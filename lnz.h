@@ -82,6 +82,7 @@ u64 LNZmallocCount( void );
 #endif 
 
 #include "parser.h"
+#include "lamping.h"
 
 #endif //LNZ_H 
 

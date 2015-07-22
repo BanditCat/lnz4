@@ -67,16 +67,23 @@ int main( int argc, char** argv ){
 	printProgram( eprog, prog );
       }
       //  printHeap( eprog );
-       red = betaReduceNormalOrder( eprog, getPointerFromName( eprog, (const u8*)"e", 1 ) );
+       //red = betaReduceNormalOrder( eprog, getPointerFromName( eprog, (const u8*)"e", 1 ) );
        reds += red;
     }while( red );
     printf( "\n%u reductions.\n\n", (unsigned int)reds );
     printProgram( eprog, prog );
   }
-  if( prog != NULL )
-    deleteProgram( prog );
   if( eprog != NULL )
     deleteProgram( eprog );
+
+  if( prog != NULL ){
+    LampingGraph* lg = makeGraph( prog, getPointerFromName( prog, eval, strlen( (const char*)eval ) ) );
+    printLampingGraph( lg );
+    deleteLampingGraph( lg );
+  }
+
+  if( prog != NULL )
+    deleteProgram( prog );
 
 
 #ifdef DEBUG

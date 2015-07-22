@@ -12,7 +12,6 @@ u32 mallocNode( LNZprogram* p ){
     LNZfree( p->heap );
     p->heap = nh;
     for( u64 i = p->heapsize; i < p->heapsize * 2; ++i ){
-      p->heap[ i ].type = 0;
       p->heap[ i ].data = i + 1;
       if( i + 1 == p->heapsize * 2 )
 	p->heap[ i ].data = i;
@@ -37,7 +36,6 @@ LNZprogram* newProgram( void ){
   ans->global = 0;
   // Mark all addresses free.
   for( u32 i = 0; i < ans->heapsize; ++i ){
-    ans->heap[ i ].type = 0;
     ans->heap[ i ].data = i + 1;
     if( i + 1 == ans->heapsize )
       ans->heap[ i ].data = i;

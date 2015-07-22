@@ -5,6 +5,8 @@ true = \x y.x;
 
 one = \f x.f x;
 two = \f x.f [f x];
+three = \f x.f [f [f x]];
+four = \f x.f [f [f [f x]]];
 
 
 
@@ -34,14 +36,18 @@ thetacbv =  [\x y.y [\z. x x y z]] [\x y.y [\z. x x y z]];
 
 
 
-incnr =  \y x.if [isnil x] 
-       	       [cons true nil]
-	       [if [head x]
-	           [cons false [y [tail x]]]
-		   [cons true [tail x]]];
+incnr = \incnr x.if [isnil x] 
+       	            [cons true nil]
+	            [if [head x]
+	                [cons false [incnr [tail x]]]
+		        [cons true [tail x]]];
 
 incr = Yp incnr;
 
-inc = incr [incr[ incr[ incr [incr nil]]]];
+inc1 = four incr nil;
 
+inc2 = [[\g.[g [g [\x.x]]]]
+       [\h.[[\f.[f [f [\z.z]]]]
+            [h [\y.y]]]]];
 
+inc = \x.x x;

@@ -1,7 +1,12 @@
-lnz.o: lnz.c lnz.h program.h nameTable.h stack.h parser.h
-main.o: main.c lnz.h program.h nameTable.h stack.h parser.h
-nameTable.o: nameTable.c lnz.h program.h nameTable.h stack.h parser.h
-os.o: os.c lnz.h program.h nameTable.h stack.h parser.h
-parser.o: parser.c lnz.h program.h nameTable.h stack.h parser.h pep.h
-program.o: program.c lnz.h program.h nameTable.h stack.h parser.h
-stack.o: stack.c lnz.h program.h nameTable.h stack.h parser.h
+lamping.o: lamping.c lnz.h program.h nameTable.h stack.h parser.h \
+ lamping.h
+lnz.o: lnz.c lnz.h program.h nameTable.h stack.h parser.h lamping.h
+main.o: main.c lnz.h program.h nameTable.h stack.h parser.h lamping.h
+nameTable.o: nameTable.c lnz.h program.h nameTable.h stack.h parser.h \
+ lamping.h
+os.o: os.c lnz.h program.h nameTable.h stack.h parser.h lamping.h
+parser.o: parser.c lnz.h program.h nameTable.h stack.h parser.h lamping.h \
+ pep.h
+program.o: program.c lnz.h program.h nameTable.h stack.h parser.h \
+ lamping.h
+stack.o: stack.c lnz.h program.h nameTable.h stack.h parser.h lamping.h
