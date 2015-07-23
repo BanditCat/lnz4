@@ -79,6 +79,15 @@ int main( int argc, char** argv ){
   if( prog != NULL ){
     LampingGraph* lg = makeGraph( prog, getPointerFromName( prog, eval, strlen( (const char*)eval ) ) );
     printLampingGraph( lg );
+    u32 w;
+    if( !ruleSweep( lg, ruleOneA, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule I.a at %u\n", w );
+    if( !ruleSweep( lg, ruleOneA, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule I.a at %u\n", w );
+    printLampingGraph( lg );
+   
     deleteLampingGraph( lg );
   }
 

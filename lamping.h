@@ -51,3 +51,9 @@ void freeLampingNode( LampingGraph* g, u32 node );
 LampingGraph* makeGraph( LNZprogram* p, u32 ind );
 
 void printLampingGraph( const LampingGraph* g );
+
+// Sweeps the graph attempting to apply rule. Returns 1 and sets ind if successful.
+int ruleSweep( LampingGraph* g, int (*rule)( LampingGraph*, u32 ), u32* ind );
+
+int ruleOneA( LampingGraph* g, u32 ind );
+

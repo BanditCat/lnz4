@@ -85,7 +85,7 @@ int equalsGraphTree( const LampingGraph* g, u32 gind, const LNZprogram* p,
 }
 
 // Weakly copies a tree expression into a graph. For all nodes in just points to the 
-// node, because there may be reference counts over 1.
+// node, because there may be a reference counts over 1.
 u32 copyTreeToGraph( LampingGraph* g, LNZprogram* p, u32 ind,
 		     LNZprogram* lambdas, stack* subexprs ){
   // If this expression already exists in the graph, return it.
@@ -117,9 +117,9 @@ u32 copyTreeToGraph( LampingGraph* g, LNZprogram* p, u32 ind,
 				    sizeof( u32 ) );
     g->heap[ nn ].la.arg = lmbda;
     g->heap[ lmbda ].la.arg = nn;
+    push( subexprs, nn );
   }else
     LNZdie( "IMPLEMENT ME!BUGBUG" );
-  push( subexprs, nn );
   return nn;
 }
 
@@ -244,6 +244,56 @@ int bracketFreeVars( LampingGraph* g, u32 ind, nameTable* lambdas ){
   }
   return 0;
 }
+// This is a better version that respects the transparency rule.
+int betterBracketFreeVars( LampingGraph* g, u32 ind, nameTable* lambdas ){
+  if( g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE )
+    return betterBracketFreeVars( g, g->heap[ ind ].in, lambdas );
+  else if( g->heap[ ind ].type == LAMPING_BRACKET_TYPE )
+    return betterBracketFreeVars( g, g->heap[ ind ].out, lambdas );
+  else if( g->heap[ ind ].type >= LAMPING_FAN_START ){
+    u32 bot = g->heap[ ind ].out;
+    while( g->heap[ bot ].type >= LAMPING_FAN_START )
+      bot = g->heap[ bot ].out;
+    if( g->heap[ bot ].type == LAMPING_FREE_TYPE ){
+      if( getIndex( lambdas, (const u8*)( &( g->heap[ bot ].la.arg ) ), 
+		    sizeof( u32 ) ) )
+	return 0;
+      u32 t = g->heap[ ind ].in;
+      u32 nn = mallocLampingNode( g ); 
+      g->heap[ nn ].type = LAMPING_BRACKET_TYPE;
+      g->heap[ nn ].la.level = 0;
+      g->heap[ nn ].in = t;
+      g->heap[ nn ].out = ind;
+      repoint( g, t, ind, nn );
+      g->heap[ ind ].in = nn;
+      return 1;    
+    } else
+      return betterBracketFreeVars( g, g->heap[ ind ].out, lambdas );
+  }
+  else if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
+    addNameToTable( lambdas, (const u8*)( &ind ), sizeof( u32 ) );
+    int ans = betterBracketFreeVars( g, g->heap[ ind ].out, lambdas );
+    popNameTable( lambdas );
+    return ans;
+  }else if( g->heap[ ind ].type == LAMPING_APPLICATION_TYPE ){
+    int ft = betterBracketFreeVars( g, g->heap[ ind ].out, lambdas );
+    return betterBracketFreeVars( g, g->heap[ ind ].la.arg, lambdas ) || ft;
+  }else if( g->heap[ ind ].type == LAMPING_FREE_TYPE ){
+    if( getIndex( lambdas, (const u8*)( &( g->heap[ ind ].la.arg ) ), 
+		  sizeof( u32 ) ) )
+      return 0;
+    u32 t = g->heap[ ind ].in;
+    u32 nn = mallocLampingNode( g ); 
+    g->heap[ nn ].type = LAMPING_BRACKET_TYPE;
+    g->heap[ nn ].la.level = 0;
+    g->heap[ nn ].in = t;
+    g->heap[ nn ].out = ind;
+    repoint( g, t, ind, nn );
+    g->heap[ ind ].in = nn;
+    return 1;
+  }
+  return 0;
+}
 
 // This is a helper function to set up brackets over free variables and 
 // the lambdas containing them. This also creates voids for lambdas with
@@ -267,7 +317,7 @@ void bracketFreeLambdas( LampingGraph* g ){
       }
       while( nt->size )
 	popNameTable( nt );
-      if( bracketFreeVars( g, i, nt ) ){
+      if( betterBracketFreeVars( g, i, nt ) ){
 	u32 t = g->heap[ i ].in;
 	u32 nn = mallocLampingNode( g ); 
 	g->heap[ nn ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
@@ -377,3 +427,43 @@ void printLampingGraph( const LampingGraph* g ){
     }
   }
 }
+
+
+// These all attempt to apply a rule at ind.
+
+int ruleOneA( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
+    u32 appl = g->heap[ ind ].in;
+    if( g->heap[ appl ].type == LAMPING_APPLICATION_TYPE &&
+	g->heap[ appl ].out == ind ){
+      u32 bdy = g->heap[ ind ].out;
+      u32 va = g->heap[ appl ].in;
+      repoint( g, bdy, ind, va );
+      repoint( g, va, appl, bdy );
+      u32 var = g->heap[ ind ].la.arg;
+      u32 vc = g->heap[ var ].in;
+      u32 vd = g->heap[ appl ].la.arg;
+      repoint( g, vd, appl, vc );
+      repoint( g, vc, var, vd );
+      freeLampingNode( g, var );
+      freeLampingNode( g, appl );
+      freeLampingNode( g, ind );
+      return 1;
+    }
+  }
+  return 0;
+}
+
+
+int ruleSweep( LampingGraph* g, int (*rule)( LampingGraph*, u32 ), u32* ind ){
+  for( u64 i = 0; i < g->heapsize; ++i ){
+    if( g->heap[ i ].type ){
+      if( rule( g, i ) ){
+	*ind = i;
+	return 1;
+      }
+    }
+  }
+  return 0;
+}
+
