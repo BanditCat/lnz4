@@ -221,7 +221,8 @@ int bracketFreeVars( LampingGraph* g, u32 ind, nameTable* lambdas ){
   else if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
     addNameToTable( lambdas, (const u8*)( &ind ), sizeof( u32 ) );
     int ans = bracketFreeVars( g, g->heap[ ind ].out, lambdas );
-    popNameTable( lambdas );
+    if( getIndex( lambdas, (const u8*)( &ind ), sizeof( u32 ) ) )
+	popNameTable( lambdas );
     return ans;
   }else if( g->heap[ ind ].type == LAMPING_APPLICATION_TYPE ){
     int ft = bracketFreeVars( g, g->heap[ ind ].out, lambdas );
@@ -238,7 +239,7 @@ int bracketFreeVars( LampingGraph* g, u32 ind, nameTable* lambdas ){
     g->heap[ nn ].out = ind;
     repoint( g, t, ind, nn );
     g->heap[ ind ].in = nn;
-    
+    addNameToTable( lambdas, (const u8*)( &( g->heap[ ind ].la.arg ) ), sizeof( u32 ) );
     return 1;
   }
   return 0;
@@ -264,6 +265,8 @@ void bracketFreeLambdas( LampingGraph* g ){
 	g->heap[ vr ].la.arg = i;
 	g->heap[ i ].la.arg = vr;
       }
+      while( nt->size )
+	popNameTable( nt );
       if( bracketFreeVars( g, i, nt ) ){
 	u32 t = g->heap[ i ].in;
 	u32 nn = mallocLampingNode( g ); 
