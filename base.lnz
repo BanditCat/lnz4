@@ -50,4 +50,4 @@ inc2 = [[\g.[g [g [\x.x]]]]
        [\h.[[\f.[f [f [\z.z]]]]
             [h [\y.y]]]]];
 
-inc = \x.[x [\y.x x]];y
+inc = \x.[x [\y.x x]];
