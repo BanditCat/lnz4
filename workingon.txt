@@ -1,1 +1,1 @@
-Commands and pretty printing. Keeping track of reducable terms. Eta and identity reduction. Reference counting.
+Lamping graphs.
