@@ -86,6 +86,18 @@ int main( int argc, char** argv ){
     if( !ruleSweep( lg, ruleOneA, &w ) )
       LNZdie( "bloop" );
     printf( "\nApplied rule I.a at %u\n", w );
+    if( !ruleSweep( lg, ruleThreeA, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule III.a at %u\n", w );
+    if( !ruleSweep( lg, ruleTwoA, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule II.a at %u\n", w );
+    if( !ruleSweep( lg, ruleFourB, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule IV.b at %u\n", w );
+    if( !ruleSweep( lg, ruleFourD, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule IV.d at %u\n", w );
     printLampingGraph( lg );
    
     deleteLampingGraph( lg );

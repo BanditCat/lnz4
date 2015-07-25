@@ -39,6 +39,7 @@ typedef struct{
   LampingNode* heap;
   u32 heapsize;
   u32 frees;
+  u32 root;
 } LampingGraph;
 
 LampingGraph* newLampingGraph( void );
@@ -56,4 +57,19 @@ void printLampingGraph( const LampingGraph* g );
 int ruleSweep( LampingGraph* g, int (*rule)( LampingGraph*, u32 ), u32* ind );
 
 int ruleOneA( LampingGraph* g, u32 ind );
-
+int ruleOneB( LampingGraph* g, u32 ind );
+int ruleTwoA( LampingGraph* g, u32 ind );
+int ruleTwoB( LampingGraph* g, u32 ind );
+int ruleTwoC( LampingGraph* g, u32 ind );
+int ruleThreeA( LampingGraph* g, u32 ind );
+int ruleThreeB( LampingGraph* g, u32 ind );
+int ruleFourA( LampingGraph* g, u32 ind );
+int ruleFourB( LampingGraph* g, u32 ind );
+int ruleFourC( LampingGraph* g, u32 ind );
+int ruleFourD( LampingGraph* g, u32 ind );
+int ruleFourE( LampingGraph* g, u32 ind );
+int ruleFiveAB( LampingGraph* g, u32 ind );
+int ruleSixA( LampingGraph* g, u32 ind );
+int ruleSixB( LampingGraph* g, u32 ind );
+int ruleSixCD( LampingGraph* g, u32 ind );
+int ruleSixEF( LampingGraph* g, u32 ind );

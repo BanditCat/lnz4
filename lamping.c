@@ -154,20 +154,6 @@ void fanin( LampingGraph* g ){
   for( u64 i = 0; i < g->heapsize; ++i ){
     if( g->heap[ i ].type ){
       if( g->heap[ i ].type == LAMPING_APPLICATION_TYPE ){
-	u32 func = g->heap[ i ].out;
-	if( g->heap[ func ].in == func )
-	  g->heap[ func ].in = i;
-	else{
-	  u32 fi = mallocLampingNode( g );
-	  u32 op = g->heap[ func ].in;
-	  g->heap[ fi ].type = LAMPING_FAN_START;
-	  g->heap[ fi ].out = func;
-	  g->heap[ func ].in = fi;
-	  g->heap[ i ].out = fi;
-	  g->heap[ fi ].in = i;
-	  g->heap[ fi ].la.arg = op;
-	  repoint( g, op, func, fi );
-	}
 	u32 arg = g->heap[ i ].la.arg;
 	if( g->heap[ arg ].in == arg )
 	  g->heap[ arg ].in = i;
@@ -178,9 +164,23 @@ void fanin( LampingGraph* g ){
 	  g->heap[ fi ].out = arg;
 	  g->heap[ arg ].in = fi;
 	  g->heap[ i ].la.arg = fi;
-	  g->heap[ fi ].in = i;
-	  g->heap[ fi ].la.arg = op;
+	  g->heap[ fi ].la.arg = i;
+	  g->heap[ fi ].in = op;
 	  repoint( g, op, arg, fi );
+	}
+	u32 func = g->heap[ i ].out;
+	if( g->heap[ func ].in == func )
+	  g->heap[ func ].in = i;
+	else{
+	  u32 fi = mallocLampingNode( g );
+	  u32 op = g->heap[ func ].in;
+	  g->heap[ fi ].type = LAMPING_FAN_START;
+	  g->heap[ fi ].out = func;
+	  g->heap[ func ].in = fi;
+	  g->heap[ i ].out = fi;
+	  g->heap[ fi ].la.arg = i;
+	  g->heap[ fi ].in = op;
+	  repoint( g, op, func, fi );
 	}
       }else if( g->heap[ i ].type == LAMPING_LAMBDA_TYPE ){
 	u32 bdy = g->heap[ i ].out;
@@ -193,17 +193,14 @@ void fanin( LampingGraph* g ){
 	  g->heap[ fi ].out = bdy;
 	  g->heap[ bdy ].in = fi;
 	  g->heap[ i ].out = fi;
-	  g->heap[ fi ].in = i;
-	  g->heap[ fi ].la.arg = op;
+	  g->heap[ fi ].la.arg = i;
+	  g->heap[ fi ].in = op;
 	  repoint( g, op, bdy, fi );
 	}
       }else if( g->heap[ i ].type == LAMPING_ROOT_TYPE ){
 	u32 bdy = g->heap[ i ].out;
 	if( g->heap[ bdy ].in == bdy )
 	  g->heap[ bdy ].in = i;
-	else{
-	  LNZdie( "Impossible!" );
-	}
       }     
     }
   }
@@ -376,10 +373,13 @@ LampingGraph* makeGraph( LNZprogram* p, u32 ind ){
   ans->heap[ rt ].la.arg = rt;
   ans->heap[ rt ].in = rt;
   ans->heap[ rt ].out = bd;
+  
 
   fanin( ans );
   bracketFreeLambdas( ans );
   bracketFanins( ans );
+
+  ans->root = rt;
 
   deleteStack( subexprs );
   deleteProgram( lambdas );
@@ -417,7 +417,7 @@ void printLampingGraph( const LampingGraph* g ){
 	printf( "void       , body    %8u\n", 
 		g->heap[ i ].out );
       else if( g->heap[ i ].type >= LAMPING_FAN_START )
-	printf( "fan        , level   %8u, point   %8u, zero    %8u, one     %8u\n",
+	printf( "fan        , level   %8u, point   %8u, star    %8u, zero    %8u\n",
 		g->heap[ i ].type - LAMPING_FAN_START, g->heap[ i ].out,
 		g->heap[ i ].in, g->heap[ i ].la.arg );
       else
@@ -430,7 +430,6 @@ void printLampingGraph( const LampingGraph* g ){
 
 
 // These all attempt to apply a rule at ind.
-
 int ruleOneA( LampingGraph* g, u32 ind ){
   if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
     u32 appl = g->heap[ ind ].in;
@@ -453,7 +452,512 @@ int ruleOneA( LampingGraph* g, u32 ind ){
   }
   return 0;
 }
+int ruleOneB( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
+    u32 rb = g->heap[ ind ].in;
+    if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
+	g->heap[ rb ].la.level == 0 ){
+      u32 appl = g->heap[ ind ].out;
+      if( g->heap[ appl ].type == LAMPING_APPLICATION_TYPE &&
+	  g->heap[ appl ].out == rb ){
+	u32 bdy = g->heap[ ind ].out;
+	u32 va = g->heap[ appl ].in;
+	repoint( g, bdy, ind, rb );
+	repoint( g, rb, ind, bdy );
+	repoint( g, va, appl, rb );
+	repoint( g, rb, appl, va );
+	u32 var = g->heap[ ind ].la.arg;
+	u32 vd = g->heap[ appl ].la.arg;
+	g->heap[ var ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+	g->heap[ var ].la.level = 0;
+	g->heap[ var ].out = vd;
+	repoint( g, vd, appl, var );
+	freeLampingNode( g, appl );
+	freeLampingNode( g, ind );
+	return 1;
+      }
+    }
+  }
+  return 0;
+}
+int ruleTwoA( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
+    u32 cb = g->heap[ ind ].in;
+    if( g->heap[ cb ].type == LAMPING_CONDITIONAL_BRACKET_TYPE &&
+	g->heap[ cb ].out == ind ){
+      u32 va = g->heap[ cb ].in;
+      u32 vb = g->heap[ ind ].out;
+      u32 var = g->heap[ ind ].la.arg;
+      u32 vc = g->heap[ var ].in;
+      u32 ncb = mallocLampingNode( g );
+      g->heap[ ncb ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+      g->heap[ ncb ].la.level = g->heap[ cb ].la.level;
+      g->heap[ ncb ].out = vc;
+      g->heap[ ncb ].in = var;
+      repoint( g, var, vc, ncb );
+      repoint( g, vc, var, ncb );
+      g->heap[ ind ].in = va;
+      repoint( g, va, cb, ind );
+      g->heap[ ind ].out = cb;
+      g->heap[ cb ].in = ind;
+      g->heap[ cb ].out = vb;
+      repoint( g, vb, ind, cb );
+      return 1;
+    }
+  }
+  return 0;
+}
+int ruleTwoB( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
+    u32 rb = g->heap[ ind ].in;
+    if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
+	g->heap[ rb ].in == ind ){
+      u32 va = g->heap[ rb ].out;
+      u32 vb = g->heap[ ind ].out;
+      u32 var = g->heap[ ind ].la.arg;
+      u32 vc = g->heap[ var ].in;
+      u32 nrb = mallocLampingNode( g );
+      g->heap[ nrb ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+      g->heap[ nrb ].la.level = g->heap[ rb ].la.level;
+      g->heap[ nrb ].out = var;
+      g->heap[ nrb ].in = vc;
+      repoint( g, var, vc, nrb );
+      repoint( g, vc, var, nrb );
+      g->heap[ ind ].in = va;
+      repoint( g, va, rb, ind );
+      g->heap[ ind ].out = rb;
+      g->heap[ rb ].out = ind;
+      g->heap[ rb ].in = vb;
+      repoint( g, vb, ind, rb );
+      return 1;
+    }
+  }
+  return 0;
+}
+int ruleTwoC( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
+    u32 fi = g->heap[ ind ].in;
+    if( g->heap[ fi ].type >= LAMPING_FAN_START &&
+	g->heap[ fi ].out == ind ){
+      u32 va = g->heap[ fi ].in;
+      u32 vb = g->heap[ fi ].la.arg;
+      u32 vc = g->heap[ ind ].out;
+      u32 var = g->heap[ ind ].la.arg;
+      u32 vd = g->heap[ var ].in;
+      
+      u32 nl = mallocLampingNode( g );
+      u32 nv = mallocLampingNode( g );
+      u32 nfo = mallocLampingNode( g );
+      g->heap[ nl ].type = LAMPING_LAMBDA_TYPE;
+      g->heap[ nv ].type = LAMPING_FREE_TYPE;
+      g->heap[ nfo ].type = g->heap[ fi ].type;
+      g->heap[ nl ].la.arg = nv;
+      g->heap[ nv ].la.arg = nl;
+      
+      g->heap[ nfo ].out = vd;
+      g->heap[ nfo ].in = var;
+      g->heap[ nfo ].la.arg = nv;
+      g->heap[ nv ].in = nfo;
+      repoint( g, vd, var, nfo );
 
+      g->heap[ nl ].out = fi;
+      g->heap[ fi ].la.arg = nl;
+      repoint( g, vb, fi, nl );
+      g->heap[ nl ].in = vb;
+
+      g->heap[ ind ].in = va;
+      g->heap[ ind ].out = fi;
+      g->heap[ fi ].out = vc;
+      repoint( g, vc, ind, fi );
+      g->heap[ fi ].in = ind;
+      repoint( g, va, fi, ind );
+      
+      return 1;
+    }
+  }
+  return 0;
+}
+int ruleThreeA( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
+    u32 b = g->heap[ ind ].in;
+    if( g->heap[ b ].type == LAMPING_BRACKET_TYPE &&
+	g->heap[ b ].out == ind &&
+	g->heap[ b ].la.level == 0 ){
+      g->heap[ b ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+      return 1;
+    }
+  }
+  return 0;
+} 
+int ruleFourA( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_APPLICATION_TYPE ){
+    u32 rb = g->heap[ ind ].out;
+    if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
+	g->heap[ rb ].in == ind ){
+      u32 va = g->heap[ ind ].in;
+      u32 vb = g->heap[ rb ].out;
+      u32 vc = g->heap[ ind ].la.arg;
+      g->heap[ ind ].in = rb;
+      g->heap[ rb ].in = va;
+      g->heap[ rb ].out = ind;
+      repoint( g, va, ind, rb );
+      g->heap[ ind ].out = vb;
+      repoint( g, vb, rb, ind );
+      u32 nrb = mallocLampingNode( g );
+      g->heap[ nrb ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+      g->heap[ nrb ].la.level = g->heap[ rb ].la.level;
+      g->heap[ nrb ].in = vc;
+      repoint( g, vc, ind, nrb );
+      g->heap[ nrb ].out = ind;
+      g->heap[ ind ].la.arg = nrb;      
+      return 1;
+    }
+  }
+  return 0;
+}
+int ruleFourB( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_APPLICATION_TYPE ){
+    u32 cb = g->heap[ ind ].out;
+    if( g->heap[ cb ].type == LAMPING_CONDITIONAL_BRACKET_TYPE &&
+	g->heap[ cb ].out == ind ){
+      u32 va = g->heap[ ind ].in;
+      u32 vb = g->heap[ cb ].in;
+      u32 vc = g->heap[ ind ].la.arg;
+      g->heap[ ind ].in = cb;
+      g->heap[ cb ].out = va;
+      g->heap[ cb ].in = ind;
+      repoint( g, va, ind, cb );
+      g->heap[ ind ].out = vb;
+      repoint( g, vb, cb, ind );
+      u32 ncb = mallocLampingNode( g );
+      g->heap[ ncb ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+      g->heap[ ncb ].la.level = g->heap[ cb ].la.level;
+      g->heap[ ncb ].out = vc;
+      repoint( g, vc, ind, ncb );
+      g->heap[ ncb ].in = ind;
+      g->heap[ ind ].la.arg = ncb;      
+      return 1;
+    }
+  }
+  return 0;
+}
+int ruleFourC( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_APPLICATION_TYPE ){
+    u32 rb = g->heap[ ind ].in;
+    if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
+	g->heap[ rb ].in == ind ){
+      u32 va = g->heap[ rb ].out;
+      u32 vb = g->heap[ ind ].out;
+      u32 vc = g->heap[ ind ].la.arg;
+      g->heap[ ind ].in = va;
+      repoint( g, va, rb, ind );
+      g->heap[ rb ].out = ind;
+      g->heap[ rb ].in = vb;
+      repoint( g, vb, ind, rb );
+      g->heap[ ind ].out = rb;
+      u32 nrb = mallocLampingNode( g );
+      g->heap[ nrb ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+      g->heap[ nrb ].la.level = g->heap[ rb ].la.level;
+      g->heap[ nrb ].in = vc;
+      repoint( g, vc, ind, nrb );
+      g->heap[ nrb ].out = ind;
+      g->heap[ ind ].la.arg = nrb;      
+      return 1;
+    }
+  }
+  return 0;
+}
+int ruleFourD( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_APPLICATION_TYPE ){
+    u32 cb = g->heap[ ind ].in;
+    if( g->heap[ cb ].type == LAMPING_CONDITIONAL_BRACKET_TYPE &&
+	g->heap[ cb ].out == ind ){
+      u32 va = g->heap[ cb ].in;
+      u32 vb = g->heap[ ind ].out;
+      u32 vc = g->heap[ ind ].la.arg;
+      g->heap[ ind ].in = va;
+      repoint( g, va, cb, ind );
+      g->heap[ cb ].in = ind;
+      g->heap[ cb ].out = vb;
+      repoint( g, vb, ind, cb );
+      g->heap[ ind ].out = cb;
+      u32 ncb = mallocLampingNode( g );
+      g->heap[ ncb ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+      g->heap[ ncb ].la.level = g->heap[ cb ].la.level;
+      g->heap[ ncb ].out = vc;
+      repoint( g, vc, ind, ncb );
+      g->heap[ ncb ].in = ind;
+      g->heap[ ind ].la.arg = ncb;      
+      return 1;
+    }
+  }
+  return 0;
+}
+int ruleFourE( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_APPLICATION_TYPE ){
+    u32 fo = g->heap[ ind ].out;
+    if( g->heap[ fo ].type >= LAMPING_FAN_START &&
+	g->heap[ fo ].out == ind ){
+      u32 va = g->heap[ ind ].in;
+      u32 vb = g->heap[ fo ].in;
+      u32 vc = g->heap[ fo ].la.arg;
+      u32 vd = g->heap[ ind ].la.arg;
+      u32 nfi = mallocLampingNode( g );
+      u32 nappl = mallocLampingNode( g );
+      g->heap[ nfi ].type = g->heap[ fo ].type;
+      g->heap[ nappl ].type = LAMPING_APPLICATION_TYPE;
+      
+      g->heap[ nfi ].out = vd;
+      repoint( g, vd, ind, nfi );
+      g->heap[ nfi ].la.arg = nappl;
+      g->heap[ nappl ].la.arg = nfi;
+      g->heap[ nfi ].in = ind;
+      g->heap[ ind ].la.arg = nfi;
+      
+      g->heap[ nappl ].in = fo;
+      g->heap[ fo ].la.arg = nappl;
+      g->heap[ nappl ].out = vc;
+      repoint( g, vc, fo, nappl );
+      
+      g->heap[ fo ].out = va;
+      repoint( g, va, ind, fo );
+      g->heap[ fo ].in = ind;
+      g->heap[ ind ].in = fo;
+      
+      g->heap[ ind ].out = vb;
+      repoint( g, vb, fo, ind );
+      
+      return 1;
+    }
+  }
+  return 0;
+}
+int ruleFiveAB( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type >= LAMPING_FAN_START ){
+    u32 fo = g->heap[ ind ].out;
+    if( g->heap[ fo ].type >= LAMPING_FAN_START &&
+	g->heap[ fo ].out == ind ){
+      u32 va = g->heap[ ind ].in;
+      u32 vb = g->heap[ ind ].la.arg;
+      u32 vc = g->heap[ fo ].in;
+      u32 vd = g->heap[ fo ].la.arg;
+      if( g->heap[ fo ].type == g->heap[ ind ].type ){
+	freeLampingNode( g, ind );
+	freeLampingNode( g, fo );
+	repoint( g, va, ind, vc );
+	repoint( g, vc, fo, va );
+	repoint( g, vb, ind, vd );
+	repoint( g, vd, fo, vb );
+      } else{
+	u32 nfi = mallocLampingNode( g );
+	u32 nfo = mallocLampingNode( g );
+	g->heap[ nfi ].type = g->heap[ ind ].type;
+	g->heap[ nfo ].type = g->heap[ fo ].type;
+
+	g->heap[ fo ].out = va;
+	repoint( g, va, ind, fo );
+	g->heap[ fo ].in = ind;
+	g->heap[ ind ].in = fo;
+	g->heap[ fo ].la.arg = nfi;
+	g->heap[ nfi ].in = fo;
+	
+	g->heap[ ind ].out = vc;
+	repoint( g, vc, fo, ind );
+	g->heap[ ind ].la.arg = nfo;
+	g->heap[ nfo ].in = ind;
+
+	g->heap[ nfo ].out = vb;
+	repoint( g, vb, ind, nfo );
+	g->heap[ nfo ].la.arg = nfi;
+	g->heap[ nfi ].la.arg = nfo;
+
+	g->heap[ nfi ].out = vd;
+	repoint( g, vd, fo, nfi );
+
+      }
+      return 1;
+    }
+  }
+  return 0;
+}
+int ruleSixA( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type >= LAMPING_FAN_START ){
+    u32 b = g->heap[ ind ].out;
+    if( g->heap[ b ].type == LAMPING_BRACKET_TYPE &&
+	g->heap[ b ].out == ind ){
+    }
+    u32 va = g->heap[ b ].in;
+    u32 vb = g->heap[ ind ].in;
+    u32 vc = g->heap[ ind ].la.arg;
+    u32 nb = mallocLampingNode( g );
+    g->heap[ nb ].type = LAMPING_BRACKET_TYPE;
+    g->heap[ nb ].la.level = 0;
+    g->heap[ nb ].out = vc;
+    repoint( g, vc, ind, nb );
+    g->heap[ nb ].in = ind;
+    g->heap[ ind ].la.arg = nb;
+   
+    g->heap[ ind ].out = va;
+    repoint( g, va, b, ind );
+    g->heap[ ind ].in = b;
+    g->heap[ b ].in = ind;
+    g->heap[ ind ].type += 1;
+
+    g->heap[ b ].out = vb;
+    repoint( g, vb, ind, b );
+    
+    return 1;
+  }
+  return 0;
+}
+int ruleSixB( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type >= LAMPING_FAN_START ){
+    u32 rb = g->heap[ ind ].out;
+    if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
+	g->heap[ rb ].out == ind &&
+	g->heap[ rb ].la.level == 0 ){
+    }
+    u32 va = g->heap[ ind ].in;
+    u32 vb = g->heap[ ind ].la.arg;
+    u32 vc = g->heap[ rb ].in;
+    u32 nrb = mallocLampingNode( g );
+    g->heap[ nrb ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+    g->heap[ nrb ].la.level = 0;
+    g->heap[ nrb ].out = vb;
+    repoint( g, vb, ind, nrb );
+    g->heap[ nrb ].in = ind;
+    g->heap[ ind ].la.arg = nrb;
+   
+    g->heap[ ind ].out = vc;
+    repoint( g, vc, rb, ind );
+    g->heap[ ind ].in = rb;
+    g->heap[ rb ].in = ind;
+    g->heap[ ind ].type += 1;
+
+    g->heap[ rb ].out = va;
+    repoint( g, va, ind, rb );
+    
+    return 1;
+  }
+  return 0;
+}
+int ruleSixCD( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type >= LAMPING_FAN_START ){
+    u32 rb = g->heap[ ind ].out;
+    u32 lvl = g->heap[ ind ].type - LAMPING_FAN_START;
+    if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
+	g->heap[ rb ].in == ind &&
+	g->heap[ rb ].la.level != lvl ){
+    }
+    u32 va = g->heap[ ind ].in;
+    u32 vb = g->heap[ ind ].la.arg;
+    u32 vc = g->heap[ rb ].out;
+    u32 nrb = mallocLampingNode( g );
+    g->heap[ nrb ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+    g->heap[ nrb ].la.level = g->heap[ rb ].la.level;
+    g->heap[ nrb ].in = vb;
+    repoint( g, vb, ind, nrb );
+    g->heap[ nrb ].out = ind;
+    g->heap[ ind ].la.arg = nrb;
+   
+    g->heap[ ind ].out = vc;
+    repoint( g, vc, rb, ind );
+    g->heap[ ind ].in = rb;
+    g->heap[ rb ].out = ind;
+    if( lvl > g->heap[ rb ].la.level )
+      g->heap[ ind ].type -= 1;
+
+    g->heap[ rb ].in = va;
+    repoint( g, va, ind, rb );
+    
+    return 1;
+  }
+  return 0;
+}
+int ruleSixEF( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type >= LAMPING_FAN_START ){
+    u32 cb = g->heap[ ind ].out;
+    u32 lvl = g->heap[ ind ].type - LAMPING_FAN_START;
+    if( g->heap[ cb ].type == LAMPING_CONDITIONAL_BRACKET_TYPE &&
+	g->heap[ cb ].out == ind &&
+	g->heap[ cb ].la.level != lvl ){
+    }
+    u32 va = g->heap[ ind ].in;
+    u32 vb = g->heap[ ind ].la.arg;
+    u32 vc = g->heap[ cb ].in;
+    u32 ncb = mallocLampingNode( g );
+    g->heap[ ncb ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+    g->heap[ ncb ].la.level = 0;
+    g->heap[ ncb ].out = vb;
+    repoint( g, vb, ind, ncb );
+    g->heap[ ncb ].in = ind;
+    g->heap[ ind ].la.arg = ncb;
+   
+    g->heap[ ind ].out = vc;
+    repoint( g, vc, cb, ind );
+    g->heap[ ind ].in = cb;
+    g->heap[ cb ].in = ind;
+    if( lvl > g->heap[ cb ].la.level )
+      g->heap[ ind ].type += 1;
+
+    g->heap[ cb ].out = va;
+    repoint( g, va, ind, cb );
+    
+    return 1;
+  }
+  return 0;
+}
+int ruleSevenA( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE ){
+    u32 rb = g->heap[ ind ].in;
+    if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
+	g->heap[ rb ].in == ind &&
+	g->heap[ rb ].la.level == g->heap[ ind ].la.level ){
+      u32 va = g->heap[ ind ].out;
+      u32 vb = g->heap[ rb ].out;
+      repoint( g, va, ind, vb );
+      repoint( g, vb, rb, va );
+      freeLampingNode( g, ind );
+      freeLampingNode( g, rb );
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleSevenB( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE ){
+    u32 b = g->heap[ ind ].in;
+    if( g->heap[ b ].type == LAMPING_BRACKET_TYPE &&
+	g->heap[ b ].in == ind &&
+	g->heap[ b ].la.level == g->heap[ ind ].la.level ){
+      u32 va = g->heap[ ind ].out;
+      u32 vb = g->heap[ b ].out;
+      repoint( g, va, ind, vb );
+      repoint( g, vb, b, va );
+      freeLampingNode( g, ind );
+      freeLampingNode( g, b );
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleSevenC( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_CONDITIONAL_BRACKET_TYPE ){
+    u32 cb = g->heap[ ind ].out;
+    if( g->heap[ cb ].type == LAMPING_CONDITIONAL_BRACKET_TYPE &&
+	g->heap[ cb ].out == ind &&
+	g->heap[ cb ].la.level == g->heap[ ind ].la.level ){
+      u32 va = g->heap[ ind ].in;
+      u32 vb = g->heap[ cb ].in;
+      repoint( g, va, ind, vb );
+      repoint( g, vb, cb, va );
+      freeLampingNode( g, ind );
+      freeLampingNode( g, cb );
+      return 1;
+    }    
+  }
+  return 0;
+}
 
 int ruleSweep( LampingGraph* g, int (*rule)( LampingGraph*, u32 ), u32* ind ){
   for( u64 i = 0; i < g->heapsize; ++i ){
