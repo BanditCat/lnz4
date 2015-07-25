@@ -457,7 +457,7 @@ int ruleOneB( LampingGraph* g, u32 ind ){
     u32 rb = g->heap[ ind ].in;
     if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
 	g->heap[ rb ].la.level == 0 ){
-      u32 appl = g->heap[ ind ].out;
+      u32 appl = g->heap[ rb ].out;
       if( g->heap[ appl ].type == LAMPING_APPLICATION_TYPE &&
 	  g->heap[ appl ].out == rb ){
 	u32 bdy = g->heap[ ind ].out;
@@ -498,6 +498,7 @@ int ruleTwoA( LampingGraph* g, u32 ind ){
       repoint( g, vc, var, ncb );
       g->heap[ ind ].in = va;
       repoint( g, va, cb, ind );
+      vb = g->heap[ ind ].out;
       g->heap[ ind ].out = cb;
       g->heap[ cb ].in = ind;
       g->heap[ cb ].out = vb;
@@ -525,6 +526,7 @@ int ruleTwoB( LampingGraph* g, u32 ind ){
       repoint( g, vc, var, nrb );
       g->heap[ ind ].in = va;
       repoint( g, va, rb, ind );
+      vb = g->heap[ ind ].out;
       g->heap[ ind ].out = rb;
       g->heap[ rb ].out = ind;
       g->heap[ rb ].in = vb;
@@ -881,29 +883,29 @@ int ruleSixEF( LampingGraph* g, u32 ind ){
     if( g->heap[ cb ].type == LAMPING_CONDITIONAL_BRACKET_TYPE &&
 	g->heap[ cb ].out == ind &&
 	g->heap[ cb ].la.level != lvl ){
+      u32 va = g->heap[ ind ].in;
+      u32 vb = g->heap[ ind ].la.arg;
+      u32 vc = g->heap[ cb ].in;
+      u32 ncb = mallocLampingNode( g );
+      g->heap[ ncb ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+      g->heap[ ncb ].la.level = g->heap[ cb ].la.level;
+      g->heap[ ncb ].out = vb;
+      repoint( g, vb, ind, ncb );
+      g->heap[ ncb ].in = ind;
+      g->heap[ ind ].la.arg = ncb;
+      
+      g->heap[ ind ].out = vc;
+      repoint( g, vc, cb, ind );
+      g->heap[ ind ].in = cb;
+      g->heap[ cb ].in = ind;
+      if( lvl > g->heap[ cb ].la.level )
+	g->heap[ ind ].type += 1;
+      
+      g->heap[ cb ].out = va;
+      repoint( g, va, ind, cb );
+      
+      return 1;
     }
-    u32 va = g->heap[ ind ].in;
-    u32 vb = g->heap[ ind ].la.arg;
-    u32 vc = g->heap[ cb ].in;
-    u32 ncb = mallocLampingNode( g );
-    g->heap[ ncb ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
-    g->heap[ ncb ].la.level = 0;
-    g->heap[ ncb ].out = vb;
-    repoint( g, vb, ind, ncb );
-    g->heap[ ncb ].in = ind;
-    g->heap[ ind ].la.arg = ncb;
-   
-    g->heap[ ind ].out = vc;
-    repoint( g, vc, cb, ind );
-    g->heap[ ind ].in = cb;
-    g->heap[ cb ].in = ind;
-    if( lvl > g->heap[ cb ].la.level )
-      g->heap[ ind ].type += 1;
-
-    g->heap[ cb ].out = va;
-    repoint( g, va, ind, cb );
-    
-    return 1;
   }
   return 0;
 }
@@ -958,7 +960,185 @@ int ruleSevenC( LampingGraph* g, u32 ind ){
   }
   return 0;
 }
+int ruleSevenD( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_CONDITIONAL_BRACKET_TYPE ){
+    u32 b = g->heap[ ind ].out;
+    if( g->heap[ b ].type == LAMPING_BRACKET_TYPE &&
+	g->heap[ b ].in == ind &&
+	g->heap[ b ].la.level == g->heap[ ind ].la.level ){
+      g->heap[ ind ].type = LAMPING_BRACKET_TYPE;
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleSevenE( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_BRACKET_TYPE ){
+    u32 rb = g->heap[ ind ].out;
+    if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
+	g->heap[ rb ].in == ind ){
+      g->heap[ ind ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+      g->heap[ ind ].la.level = g->heap[ rb ].la.level + 1;
+      g->heap[ rb ].type = LAMPING_BRACKET_TYPE;
+      g->heap[ rb ].la.level = 0;
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleSevenF( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_BRACKET_TYPE ){
+    u32 cb = g->heap[ ind ].out;
+    if( g->heap[ cb ].type == LAMPING_CONDITIONAL_BRACKET_TYPE &&
+	g->heap[ cb ].out == ind ){
+      g->heap[ ind ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+      g->heap[ ind ].la.level = g->heap[ cb ].la.level + 1;
+      g->heap[ cb ].type = LAMPING_BRACKET_TYPE;
+      g->heap[ cb ].la.level = 0;
+      u32 t = g->heap[ ind ].out;
+      g->heap[ ind ].out = g->heap[ ind ].in;
+      g->heap[ ind ].in = t;
+      t = g->heap[ cb ].out;
+      g->heap[ cb ].out = g->heap[ cb ].in;
+      g->heap[ cb ].in = t;
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleSevenG( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE ){
+    u32 rb = g->heap[ ind ].out;
+    if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
+	g->heap[ rb ].in == ind &&
+	g->heap[ ind ].la.level == 0 ){
+      g->heap[ ind ].la.level = g->heap[ rb ].la.level + 1;
+      g->heap[ rb ].la.level = 0;
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleSevenH( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE ){
+    u32 cb = g->heap[ ind ].out;
+    if( g->heap[ cb ].type == LAMPING_CONDITIONAL_BRACKET_TYPE &&
+	g->heap[ cb ].out == ind &&
+	g->heap[ ind ].la.level == 0 ){
+      g->heap[ ind ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+      g->heap[ ind ].la.level = g->heap[ cb ].la.level + 1;
+      g->heap[ cb ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+      g->heap[ cb ].la.level = 0;
+      u32 t = g->heap[ ind ].out;
+      g->heap[ ind ].out = g->heap[ ind ].in;
+      g->heap[ ind ].in = t;
+      t = g->heap[ cb ].out;
+      g->heap[ cb ].out = g->heap[ cb ].in;
+      g->heap[ cb ].in = t;
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleSevenI( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE ){
+    u32 b = g->heap[ ind ].in;
+    if( g->heap[ b ].type == LAMPING_BRACKET_TYPE &&
+	g->heap[ b ].in == ind &&
+	g->heap[ ind ].la.level > 0 ){
+      g->heap[ ind ].type = LAMPING_BRACKET_TYPE;
+      g->heap[ b ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+      g->heap[ b ].la.level = g->heap[ ind ].la.level - 1;
+      g->heap[ ind ].la.level = 0;
+      u32 t = g->heap[ ind ].out;
+      g->heap[ ind ].out = g->heap[ ind ].in;
+      g->heap[ ind ].in = t;
+      t = g->heap[ b ].out;
+      g->heap[ b ].out = g->heap[ b ].in;
+      g->heap[ b ].in = t;
+      return 1;
+    }    
+  }
+  return 0;
+}
 
+int ruleSevenJ( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_CONDITIONAL_BRACKET_TYPE ){
+    u32 b = g->heap[ ind ].out;
+    if( g->heap[ b ].type == LAMPING_BRACKET_TYPE &&
+	g->heap[ b ].in == ind &&
+	g->heap[ ind ].la.level > 0 ){
+      g->heap[ ind ].type = LAMPING_BRACKET_TYPE;
+      g->heap[ b ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+      g->heap[ b ].la.level = g->heap[ ind ].la.level - 1;
+      g->heap[ ind ].la.level = 0;
+    }    
+  }
+  return 0;
+}
+int ruleSevenKL( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE ){
+    u32 cb = g->heap[ ind ].in;
+    if( g->heap[ cb ].type == LAMPING_CONDITIONAL_BRACKET_TYPE &&
+	g->heap[ cb ].out == ind &&
+	g->heap[ ind ].la.level != g->heap[ cb ].la.level ){
+      u32 clvl = g->heap[ cb ].la.level;
+      u32 rlvl = g->heap[ ind ].la.level; 
+      g->heap[ ind ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+      g->heap[ cb ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+      if( rlvl > clvl ){
+	g->heap[ cb ].la.level = rlvl + 1;
+	g->heap[ ind ].la.level = clvl;
+      }else{
+	g->heap[ cb ].la.level = rlvl;
+	g->heap[ ind ].la.level = clvl - 1;
+      }
+    }    
+  }
+  return 0;
+}
+int ruleSevenM( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE ){
+    u32 rb = g->heap[ ind ].in;
+    if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
+	g->heap[ rb ].in == ind &&
+	g->heap[ ind ].la.level > g->heap[ rb ].la.level ){
+      u32 t = g->heap[ ind ].la.level;
+      g->heap[ ind ].la.level = g->heap[ rb ].la.level;
+      g->heap[ rb ].la.level = t - 1;
+      t = g->heap[ ind ].in;
+      g->heap[ ind ].in = g->heap[ rb ].in;
+      g->heap[ rb ].in = t;
+      t = g->heap[ ind ].out;
+      g->heap[ ind ].out = g->heap[ rb ].out;
+      g->heap[ rb ].out = t;
+
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleSevenN( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_CONDITIONAL_BRACKET_TYPE ){
+    u32 cb = g->heap[ ind ].out;
+    if( g->heap[ cb ].type == LAMPING_CONDITIONAL_BRACKET_TYPE &&
+	g->heap[ cb ].out == ind &&
+	g->heap[ ind ].la.level > g->heap[ cb ].la.level ){
+      u32 t = g->heap[ ind ].la.level;
+      g->heap[ ind ].la.level = g->heap[ cb ].la.level;
+      g->heap[ cb ].la.level = t + 1;
+      t = g->heap[ ind ].in;
+      g->heap[ ind ].in = g->heap[ cb ].in;
+      g->heap[ cb ].in = t;
+      t = g->heap[ ind ].out;
+      g->heap[ ind ].out = g->heap[ cb ].out;
+      g->heap[ cb ].out = t;
+
+      return 1;
+    }    
+  }
+  return 0;
+}
 int ruleSweep( LampingGraph* g, int (*rule)( LampingGraph*, u32 ), u32* ind ){
   for( u64 i = 0; i < g->heapsize; ++i ){
     if( g->heap[ i ].type ){

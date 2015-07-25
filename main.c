@@ -97,7 +97,51 @@ int main( int argc, char** argv ){
     printf( "\nApplied rule IV.b at %u\n", w );
     if( !ruleSweep( lg, ruleFourD, &w ) )
       LNZdie( "bloop" );
+    printf( "\nApplied rule IV.d at %u graph e\n", w );
+    if( !ruleSweep( lg, ruleFourD, &w ) )
+      LNZdie( "bloop" );
     printf( "\nApplied rule IV.d at %u\n", w );
+    if( !ruleSweep( lg, ruleSevenH, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule VII.h at %u\n", w );
+    if( !ruleSweep( lg, ruleSevenH, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule VII.h at %u\n", w );
+    if( !ruleSweep( lg, ruleSevenF, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule VII.f at %u graph f\n", w );
+    if( !ruleSweep( lg, ruleSixEF, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule VI.ef at %u\n", w );
+    if( !ruleSweep( lg, ruleTwoA, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule II.a at %u\n", w );
+    if( !ruleSweep( lg, ruleTwoA, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule II.a at %u\n", w );
+    if( !ruleSweep( lg, ruleSevenC, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule VII.c at %u\n", w );
+    if( !ruleSweep( lg, ruleSevenC, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule VII.c at %u\n", w );
+    if( !ruleSweep( lg, ruleSevenC, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule VII.c at %u\n", w );
+    if( !ruleSweep( lg, ruleSevenC, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule VII.c at %u graph h\n", w );
+    if( !ruleSweep( lg, ruleTwoC, &w ) )
+      LNZdie( "bloop" );
+    printf( "\nApplied rule II.c at %u graph i\n", w );
+    u32 ic;
+
+    ic = 27;
+    if( !ruleOneB( lg, ic ) ) 
+       LNZdie( "bloop" ); 
+     printf( "\nApplied rule I.b at %u graph j\n", ic );
+
+ 
     printLampingGraph( lg );
    
     deleteLampingGraph( lg );
