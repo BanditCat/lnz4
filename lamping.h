@@ -50,39 +50,17 @@ void freeLampingNode( LampingGraph* g, u32 node );
 
 // Creates a graph from a tree.
 LampingGraph* makeGraph( LNZprogram* p, u32 ind );
+// Creates a tree from a graph, the nametable is empty except for e which is
+// the translated expression.
+LNZprogram* makeProgramFromGraph( LampingGraph* g );
 
 void printLampingGraph( const LampingGraph* g );
 
 // Sweeps the graph attempting to apply rule. Returns 1 and sets ind if successful.
 int ruleSweep( LampingGraph* g, int (*rule)( LampingGraph*, u32 ), u32* ind );
 
-int ruleOneA( LampingGraph* g, u32 ind );
-int ruleOneB( LampingGraph* g, u32 ind );
-int ruleTwoA( LampingGraph* g, u32 ind );
-int ruleTwoB( LampingGraph* g, u32 ind );
-int ruleTwoC( LampingGraph* g, u32 ind );
-int ruleThreeA( LampingGraph* g, u32 ind );
-int ruleThreeB( LampingGraph* g, u32 ind );
-int ruleFourA( LampingGraph* g, u32 ind );
-int ruleFourB( LampingGraph* g, u32 ind );
-int ruleFourC( LampingGraph* g, u32 ind );
-int ruleFourD( LampingGraph* g, u32 ind );
-int ruleFourE( LampingGraph* g, u32 ind );
-int ruleFiveAB( LampingGraph* g, u32 ind );
-int ruleSixA( LampingGraph* g, u32 ind );
-int ruleSixB( LampingGraph* g, u32 ind );
-int ruleSixCD( LampingGraph* g, u32 ind );
-int ruleSixEF( LampingGraph* g, u32 ind );
-int ruleSevenA( LampingGraph* g, u32 ind );
-int ruleSevenB( LampingGraph* g, u32 ind );
-int ruleSevenC( LampingGraph* g, u32 ind );
-int ruleSevenD( LampingGraph* g, u32 ind );
-int ruleSevenE( LampingGraph* g, u32 ind );
-int ruleSevenF( LampingGraph* g, u32 ind );
-int ruleSevenG( LampingGraph* g, u32 ind );
-int ruleSevenH( LampingGraph* g, u32 ind );
-int ruleSevenI( LampingGraph* g, u32 ind );
-int ruleSevenJ( LampingGraph* g, u32 ind );
-int ruleSevenKL( LampingGraph* g, u32 ind );
-int ruleSevenM( LampingGraph* g, u32 ind );
-int ruleSevenN( LampingGraph* g, u32 ind );
+// Makes the part of ind that points to whch point to new instead.
+void repoint( LampingGraph* g, u32 ind, u32 whch, u32 new );
+
+int rulesSweep( LampingGraph* g, u32* ind, u32* rule );
+int traceRulesSweep( LampingGraph* g );

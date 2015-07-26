@@ -1,12 +1,17 @@
 lamping.o: lamping.c lnz.h program.h nameTable.h stack.h parser.h \
- lamping.h
-lnz.o: lnz.c lnz.h program.h nameTable.h stack.h parser.h lamping.h
-main.o: main.c lnz.h program.h nameTable.h stack.h parser.h lamping.h
+ lamping.h rules.h
+lnz.o: lnz.c lnz.h program.h nameTable.h stack.h parser.h lamping.h \
+ rules.h
+main.o: main.c lnz.h program.h nameTable.h stack.h parser.h lamping.h \
+ rules.h
 nameTable.o: nameTable.c lnz.h program.h nameTable.h stack.h parser.h \
- lamping.h
-os.o: os.c lnz.h program.h nameTable.h stack.h parser.h lamping.h
+ lamping.h rules.h
+os.o: os.c lnz.h program.h nameTable.h stack.h parser.h lamping.h rules.h
 parser.o: parser.c lnz.h program.h nameTable.h stack.h parser.h lamping.h \
- pep.h
+ rules.h pep.h
 program.o: program.c lnz.h program.h nameTable.h stack.h parser.h \
- lamping.h
-stack.o: stack.c lnz.h program.h nameTable.h stack.h parser.h lamping.h
+ lamping.h rules.h
+rules.o: rules.c lnz.h program.h nameTable.h stack.h parser.h lamping.h \
+ rules.h
+stack.o: stack.c lnz.h program.h nameTable.h stack.h parser.h lamping.h \
+ rules.h
