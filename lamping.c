@@ -242,11 +242,11 @@ int bracketFreeVars( LampingGraph* g, u32 ind, nameTable* lambdas ){
   return 0;
 }
 // This is a better version that respects the transparency rule.
-int betterBracketFreeVars( LampingGraph* g, u32 ind, nameTable* lambdas ){
+int betterBracketFreeVars( LampingGraph* g, u32 ind, u32 from, nameTable* lambdas ){
   if( g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE )
-    return betterBracketFreeVars( g, g->heap[ ind ].in, lambdas );
+    return betterBracketFreeVars( g, g->heap[ ind ].in, ind, lambdas );
   else if( g->heap[ ind ].type == LAMPING_BRACKET_TYPE )
-    return betterBracketFreeVars( g, g->heap[ ind ].out, lambdas );
+    return betterBracketFreeVars( g, g->heap[ ind ].out, ind, lambdas );
   else if( g->heap[ ind ].type >= LAMPING_FAN_START ){
     u32 bot = g->heap[ ind ].out;
     while( g->heap[ bot ].type >= LAMPING_FAN_START )
@@ -255,26 +255,30 @@ int betterBracketFreeVars( LampingGraph* g, u32 ind, nameTable* lambdas ){
       if( getIndex( lambdas, (const u8*)( &( g->heap[ bot ].la.arg ) ), 
 		    sizeof( u32 ) ) )
 	return 0;
-      u32 t = g->heap[ ind ].in;
       u32 nn = mallocLampingNode( g ); 
       g->heap[ nn ].type = LAMPING_BRACKET_TYPE;
       g->heap[ nn ].la.level = 0;
-      g->heap[ nn ].in = t;
+      g->heap[ nn ].in = from;
       g->heap[ nn ].out = ind;
-      repoint( g, t, ind, nn );
-      g->heap[ ind ].in = nn;
+      repoint( g, from, ind, nn );
+      if( from == g->heap[ ind ].in )
+	g->heap[ ind ].in = nn;
+      else if( from == g->heap[ ind ].la.arg )
+	g->heap[ ind ].la.arg = nn;
+      else
+	LNZdie( "Antipep!" );
       return 1;    
     } else
-      return betterBracketFreeVars( g, g->heap[ ind ].out, lambdas );
+      return betterBracketFreeVars( g, g->heap[ ind ].out, ind, lambdas );
   }
   else if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
     addNameToTable( lambdas, (const u8*)( &ind ), sizeof( u32 ) );
-    int ans = betterBracketFreeVars( g, g->heap[ ind ].out, lambdas );
+    int ans = betterBracketFreeVars( g, g->heap[ ind ].out, ind, lambdas );
     popNameTable( lambdas );
     return ans;
   }else if( g->heap[ ind ].type == LAMPING_APPLICATION_TYPE ){
-    int ft = betterBracketFreeVars( g, g->heap[ ind ].out, lambdas );
-    return betterBracketFreeVars( g, g->heap[ ind ].la.arg, lambdas ) || ft;
+    int ft = betterBracketFreeVars( g, g->heap[ ind ].out, ind, lambdas );
+    return betterBracketFreeVars( g, g->heap[ ind ].la.arg, ind, lambdas ) || ft;
   }else if( g->heap[ ind ].type == LAMPING_FREE_TYPE ){
     if( getIndex( lambdas, (const u8*)( &( g->heap[ ind ].la.arg ) ), 
 		  sizeof( u32 ) ) )
@@ -314,7 +318,7 @@ void bracketFreeLambdas( LampingGraph* g ){
       }
       while( nt->size )
 	popNameTable( nt );
-      if( betterBracketFreeVars( g, i, nt ) ){
+      if( betterBracketFreeVars( g, i, i, nt ) ){
 	u32 t = g->heap[ i ].in;
 	u32 nn = mallocLampingNode( g ); 
 	g->heap[ nn ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
@@ -471,7 +475,16 @@ static int (*rules[])( LampingGraph* g, u32 ind ) = {
   ruleSevenJ,
   ruleSevenKL,
   ruleSevenM,
-  ruleSevenN
+  ruleSevenN,
+
+  ruleEightA,
+  ruleEightBCD,
+  ruleEightE,
+  ruleEightF,
+  ruleEightGH,
+  ruleEightIJKLMN,
+  ruleEightO
+
 };
 const char* ruleNames[] = {
   "I.a",
@@ -503,7 +516,15 @@ const char* ruleNames[] = {
   "VII.j",
   "VII.kl",
   "VII.m",
-  "VII.n"
+  "VII.n",
+
+  "VIII.a",
+  "VIII.bcd",
+  "VIII.e",
+  "VIII.f",
+  "VIII.gh",
+  "VIII.ijklmn",
+  "VIII.o"
 };
 
 int rulesSweep( LampingGraph* g, u32* ind, u32* rule ){
@@ -642,11 +663,13 @@ u32 copyGraphToTree( LNZprogram* p, const LampingGraph* g, u32 ind, u32 from,
     u32 os;
     if( from == g->heap[ ind ].in ){
 #ifdef DEBUG
-      if( pcf == &w && w->next == NULL )
+      if( pcf == pc && w->next == NULL )
 	LNZdie( "Not possible!" );
 #endif
       *pcf = w->next;
-      deletePathContextLevel( w );
+      if( w->closures != NULL )
+	deletePathContext( w->closures );
+      LNZfree( w );
       os = g->heap[ ind ].out;
 
     }else if( from == g->heap[ ind ].out ){
@@ -675,13 +698,14 @@ u32 copyGraphToTree( LNZprogram* p, const LampingGraph* g, u32 ind, u32 from,
     if( from == g->heap[ ind ].in ){
 #ifdef DEBUG
       if( pcf == pc && w->next == NULL )
-	LNZdie( "Not possible!" );
+	LNZdie( "Not possible2!" );
 #endif
       *pcf = w->next;
       pathContext* o = (*pcf)->closures;
       (*pcf)->closures = w;
-      w->next = NULL;
+      w->next = w->closures;
       w->closures = o;
+ 
       os = g->heap[ ind ].out;
     }else if( from == g->heap[ ind ].out ){
 #ifdef DEBUG
@@ -689,9 +713,15 @@ u32 copyGraphToTree( LNZprogram* p, const LampingGraph* g, u32 ind, u32 from,
 	LNZdie( "No closure!" );
 #endif
       *pcf = w->closures;
-      w->closures = w->closures->closures;
+      pathContext* o = (*pcf)->closures;
+      (*pcf)->closures = (*pcf)->next;
       (*pcf)->next = w;
-      (*pcf)->closures = NULL;
+      w->closures = o;
+       
+      /* w->closures = NULL;     */
+      //(*pcf)->next = w;
+      //w->closures = w->closures->closures;
+      //(*pcf)->closures = NULL;
       os = g->heap[ ind ].in;
       
     }else

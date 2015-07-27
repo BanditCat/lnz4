@@ -742,3 +742,137 @@ int ruleSevenN( LampingGraph* g, u32 ind ){
   }
   return 0;
 }
+int ruleEightA( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_VOID_TYPE ){
+    u32 l = g->heap[ ind ].out;
+    if( g->heap[ l ].type == LAMPING_LAMBDA_TYPE &&
+	g->heap[ l ].in == ind ){
+      u32 var = g->heap[ l ].la.arg;
+      u32 va = g->heap[ l ].out;
+      g->heap[ ind ].out = va;
+      repoint( g, va, l, ind );
+      g->heap[ var ].out = g->heap[ var ].in;
+      g->heap[ var ].type = LAMPING_VOID_TYPE;
+      freeLampingNode( g, l );
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleEightBCD( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_VOID_TYPE ){
+    u32 appl = g->heap[ ind ].out;
+    if( g->heap[ appl ].type == LAMPING_APPLICATION_TYPE ){
+      if( g->heap[ appl ].in == ind ){
+	g->heap[ appl ].type = LAMPING_VOID_TYPE;
+	u32 vb = g->heap[ appl ].la.arg;
+	g->heap[ ind ].out = vb;
+	repoint( g, vb, appl, ind );
+      }else if( g->heap[ appl ].out == ind ){
+	u32 va = g->heap[ appl ].in;
+	g->heap[ appl ].type = LAMPING_VOID_TYPE;
+	g->heap[ appl ].out = va;
+	u32 vb = g->heap[ appl ].la.arg;
+	g->heap[ ind ].out = vb;
+	repoint( g, vb, appl, ind );
+      }else if( g->heap[ appl ].la.arg == ind ){
+	u32 va = g->heap[ appl ].in;
+	g->heap[ appl ].type = LAMPING_VOID_TYPE;
+	g->heap[ appl ].out = va;
+	u32 vb = g->heap[ appl ].out;
+	g->heap[ ind ].out = vb;
+	repoint( g, vb, appl, ind );
+      }else
+	LNZdie( "ASSPLODE!" );
+
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleEightE( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_VOID_TYPE ){
+    u32 f = g->heap[ ind ].out;
+    if( g->heap[ f ].type >= LAMPING_FAN_START &&
+	g->heap[ f ].out == ind ){
+      u32 va = g->heap[ f ].in;
+      u32 vb = g->heap[ f ].la.arg;
+      g->heap[ ind ].out = va;
+      repoint( g, va, f, ind );
+      g->heap[ f ].out = vb;
+      g->heap[ f ].type = LAMPING_VOID_TYPE;
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleEightF( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_VOID_TYPE ){
+    u32 f = g->heap[ ind ].out;
+    if( g->heap[ f ].type >= LAMPING_FAN_START &&
+	g->heap[ f ].in == ind &&
+	g->heap[ g->heap[ f ].la.arg ].type == LAMPING_VOID_TYPE ){
+      u32 va = g->heap[ f ].out;
+      g->heap[ ind ].out = va;
+      repoint( g, va, f, ind );
+      freeLampingNode( g, g->heap[ f ].la.arg );
+      freeLampingNode( g, f );
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleEightGH( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_VOID_TYPE ){
+    u32 f = g->heap[ ind ].out;
+    if( g->heap[ f ].type >= LAMPING_FAN_START &&
+	g->heap[ f ].out != ind ){
+      u32 va;
+      if( g->heap[ f ].in == ind )
+	va = g->heap[ f ].la.arg;
+      else
+	va = g->heap[ f ].in;
+      u32 b = g->heap[ f ].out;
+      if( g->heap[ b ].type == LAMPING_BRACKET_TYPE &&
+	  g->heap[ b ].in == f ){
+	repoint( g, va, f, b );
+	g->heap[ b ].in = va;
+	freeLampingNode( g, ind );
+	freeLampingNode( g, f );
+	return 1;
+      }
+    }    
+  }
+  return 0;
+}
+int ruleEightIJKLMN( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_VOID_TYPE ){
+    u32 b = g->heap[ ind ].out;
+    if( g->heap[ b ].type == LAMPING_BRACKET_TYPE ||
+	g->heap[ b ].type == LAMPING_RESTRICTED_BRACKET_TYPE ||
+	g->heap[ b ].type == LAMPING_CONDITIONAL_BRACKET_TYPE ){
+      u32 va;
+      if( g->heap[ b ].in == ind )
+	va = g->heap[ b ].out;
+      else
+	va = g->heap[ b ].in;
+      g->heap[ ind ].out = va;
+      repoint( g, va, b, ind );
+      freeLampingNode( g, b );
+      return 1;
+    }    
+  }
+  return 0;
+}
+int ruleEightO( LampingGraph* g, u32 ind ){
+  if( g->heap[ ind ].type == LAMPING_VOID_TYPE ){
+    u32 v = g->heap[ ind ].out;
+    if( g->heap[ v ].type == LAMPING_VOID_TYPE ){
+      freeLampingNode( g, v );
+      freeLampingNode( g, ind );
+      return 1;
+    }    
+  }
+  return 0;
+}
+

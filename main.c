@@ -78,212 +78,278 @@ int main( int argc, char** argv ){
 
   if( prog != NULL ){
     LampingGraph* lg = makeGraph( prog, getPointerFromName( prog, eval, strlen( (const char*)eval ) ) );
+    //printLampingGraph( lg );
+    // u32 w;
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleOneA, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule I.a at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleOneA, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule I.a at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleThreeA, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule III.a at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleTwoA, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule II.a at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleFourB, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule IV.b at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleFourD, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule IV.d at %u graph e\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleFourD, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule IV.d at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleSevenH, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule VII.h at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleSevenH, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   printf( "\nApplied rule VII.h at %u\n", w ); */
+  /*   if( !ruleSweep( lg, ruleSevenF, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule VII.f at %u graph f\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleSixEF, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule VI.ef at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleTwoA, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule II.a at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleTwoA, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule II.a at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleSevenC, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule VII.c at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleSevenC, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule VII.c at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleSevenC, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule VII.c at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleSevenC, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule VII.c at %u graph h\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleTwoC, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule II.c at %u graph i\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /* u32 ic; */
+
+  /*   ic = 27; */
+  /*   if( !ruleOneB( lg, ic ) ) */
+  /*      LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule I.b at %u graph j\n", ic ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+
+  /*   if( !ruleSweep( lg, ruleFourE, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule IV.e at %u graph k\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleSixA, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule VI.a at %u graph l\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleFiveAB, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule V.ab at %u graph m\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleSixCD, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule VI.cd at %u\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+  /*   if( !ruleSweep( lg, ruleSixCD, &w ) ) */
+  /*     LNZdie( "bloop" ); */
+  /*   printf( "\nApplied rule VI.cd at %u graph n\n", w ); */
+  /*   { */
+  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
+  /*     printProgram( tp, prog ); */
+  /*     deleteProgram( tp ); */
+  /*   } */
+    
+
+    {
+
+    LampingGraph* test = newLampingGraph();
+    u32 v = mallocLampingNode( test );
+    u32 l = mallocLampingNode( test );
+    u32 r = mallocLampingNode( test );
+    u32 rb = mallocLampingNode( test );
+    u32 bi = mallocLampingNode( test );
+    u32 bo = mallocLampingNode( test );
+    u32 bi2 = mallocLampingNode( test );
+    u32 bo2 = mallocLampingNode( test );
+    u32 rb2 = mallocLampingNode( test );
+    test->root = r;
+
+    test->heap[ v ].type = LAMPING_FREE_TYPE;
+    test->heap[ v ].la.arg = l;
+    test->heap[ v ].in = bo;
+
+    test->heap[ bo ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+    test->heap[ bo ].la.level = 0;
+    test->heap[ bo ].in = v;
+    test->heap[ bo ].out = bo2;
+    test->heap[ bo2 ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+    test->heap[ bo2 ].la.level = 0;
+    test->heap[ bo2 ].in = bo;
+    test->heap[ bo2 ].out = bi;
+    test->heap[ bi ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+    test->heap[ bi ].la.level = 0;
+    test->heap[ bi ].in = bi2;
+    test->heap[ bi ].out = bo2;
+    test->heap[ bi2 ].type = LAMPING_CONDITIONAL_BRACKET_TYPE;
+    test->heap[ bi2 ].la.level = 0;
+    test->heap[ bi2 ].in = l;
+    test->heap[ bi2 ].out = bi;
+
+    test->heap[ l ].type = LAMPING_LAMBDA_TYPE;
+    test->heap[ l ].out = bi2;
+    test->heap[ l ].in = rb;
+
+    test->heap[ rb ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+    test->heap[ rb ].la.level = 0;
+    test->heap[ rb ].in = l;
+    test->heap[ rb ].out = rb2;
+    test->heap[ rb2 ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
+    test->heap[ rb2 ].la.level = 0;
+    test->heap[ rb2 ].in = rb;
+    test->heap[ rb2 ].out = r;
+
+    test->heap[ r ].type = LAMPING_ROOT_TYPE;
+    test->heap[ r ].out = rb2;
+
+    printLampingGraph( test );
+    LNZprogram* tp = makeProgramFromGraph( test );
+    printProgram( tp, prog );
+    deleteProgram( tp );
+    deleteLampingGraph( test );
+
+  }
+
+
+
+
     printLampingGraph( lg );
-    u32 w;
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleOneA, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule I.a at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleOneA, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule I.a at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleThreeA, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule III.a at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleTwoA, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule II.a at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleFourB, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule IV.b at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleFourD, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule IV.d at %u graph e\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleFourD, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule IV.d at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleSevenH, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule VII.h at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleSevenH, &w ) )
-      LNZdie( "bloop" );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    printf( "\nApplied rule VII.h at %u\n", w );
-    if( !ruleSweep( lg, ruleSevenF, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule VII.f at %u graph f\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleSixEF, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule VI.ef at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleTwoA, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule II.a at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleTwoA, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule II.a at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleSevenC, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule VII.c at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleSevenC, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule VII.c at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleSevenC, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule VII.c at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleSevenC, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule VII.c at %u graph h\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleTwoC, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule II.c at %u graph i\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-  u32 ic;
-
-    ic = 27;
-    if( !ruleOneB( lg, ic ) )
-       LNZdie( "bloop" );
-    printf( "\nApplied rule I.b at %u graph j\n", ic );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-
-    if( !ruleSweep( lg, ruleFourE, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule IV.e at %u graph k\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleSixA, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule VI.a at %u graph l\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleFiveAB, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule V.ab at %u graph m\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleSixCD, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule VI.cd at %u\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-    if( !ruleSweep( lg, ruleSixCD, &w ) )
-      LNZdie( "bloop" );
-    printf( "\nApplied rule VI.cd at %u graph n\n", w );
-    {
-      LNZprogram* tp = makeProgramFromGraph( lg );
-      printProgram( tp, prog );
-      deleteProgram( tp );
-    }
-
+    u32 c = 0;
     while( traceRulesSweep( lg ) ){
-      //printLampingGraph( lg );
+      printf( "\n%u\n", c++ );
+      if( c > 125000 )	printLampingGraph( lg );
       LNZprogram* tp = makeProgramFromGraph( lg );
       printProgram( tp, prog );
       deleteProgram( tp );

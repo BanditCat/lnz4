@@ -36,4 +36,13 @@ int ruleSevenKL( LampingGraph* g, u32 ind );
 int ruleSevenM( LampingGraph* g, u32 ind );
 int ruleSevenN( LampingGraph* g, u32 ind );
 
+// Garbage collection
+int ruleEightA( LampingGraph* g, u32 ind );
+int ruleEightBCD( LampingGraph* g, u32 ind );
+int ruleEightE( LampingGraph* g, u32 ind );
+int ruleEightF( LampingGraph* g, u32 ind );
+int ruleEightGH( LampingGraph* g, u32 ind );
+int ruleEightIJKLMN( LampingGraph* g, u32 ind );
+int ruleEightO( LampingGraph* g, u32 ind );
+
 

@@ -21,6 +21,7 @@ static const char* pepTalks[] = {
   "Just one tiny error.",
   "Such a fine error!",
   "You know, this is just an opportunity to learn something.",
-  "I think you dropped a bracket."
+  "I think you dropped a bracket.",
+  "RA RA RA!"
 };
 
