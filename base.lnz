@@ -45,14 +45,14 @@ incnr = \incnr x.if [isnil x]
 incr = Yp incnr;
 
 
-inc1 = [\x.[\y. [[\f.[[\h.[h [\p.[h[\q.q]]]]]]
+inc = [\x.[\y. [[\f.[[\h.[h [\p.[h[\q.q]]]]]]
       	            [\l.[[[f [\n. [l n]]] x] y]]]]
 	       [\g. [\u. \v.[[g u] [g v]]]]]];
 
 
 inc2 = incnr nil [cons true nil];
 
-inc = [[\g.[g [g [\x.x]]]]
+inc1 = [[\g.[g [g [\x.x]]]]
        [\h.[[\f.[f [f [\z.z]]]]
             [h [\y.y]]]]];
 

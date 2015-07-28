@@ -1,1 +1,1 @@
-The transparency property and testing.
+Dude! A pathContext needs to be a stack, not just a direction!!!

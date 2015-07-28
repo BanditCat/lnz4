@@ -1027,4 +1027,10 @@ void validateGraph( LampingGraph* g ){
   pathContext* pc = newPathContext();
   traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, transparencyCheck );
   deletePathContext( pc );
+  for( u64 i = 0; i < g->heapsize; ++i ){
+    if( ( g->heap[ i ].type >= LAMPING_FAN_START ||
+	  g->heap[ i ].type == LAMPING_APPLICATION_TYPE ) &&
+	g->heap[ i ].la.arg == g->heap[ i ].in )
+      LNZdie( "Edge case detected!!!" );
+  }
 }

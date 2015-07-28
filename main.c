@@ -374,8 +374,8 @@ int main( int argc, char** argv ){
     u32 c = 0;
     while( traceRulesSweep( lg ) ){
       printf( "\n%u\n", c++ );
-      // if( c > 105 )	
-      //printLampingGraph( lg );
+      if( c > 95 && c < 100 )	
+	printLampingGraph( lg );
       validateGraph( lg );
       LNZprogram* tp = makeProgramFromGraph( lg );
       printProgram( tp, prog );
