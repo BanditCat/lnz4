@@ -39,20 +39,20 @@ thetacbv =  [\x y.y [\z. x x y z]] [\x y.y [\z. x x y z]];
 incnr = \incnr x.if [isnil x] 
        	            [cons true nil]
 	            [if [head x]
-	                [cons false [incnr incnr [tail x]]]
+	                [cons false [incnr [tail x]]]
 		        [cons true [tail x]]];
 
 incr = Yp incnr;
 
 
-inc = [\x.[\y. [[\f.[[\h.[h [\p.[h[\q.q]]]]]]
+inc1 = [\x.[\y. [[\f.[[\h.[h [\p.[h[\q.q]]]]]]
       	            [\l.[[[f [\n. [l n]]] x] y]]]]
 	       [\g. [\u. \v.[[g u] [g v]]]]]];
 
 
-inc2 = incnr incnr [cons true nil];
+inc2 = incnr nil [cons true nil];
 
-inc1 = [[\g.[g [g [\x.x]]]]
+inc = [[\g.[g [g [\x.x]]]]
        [\h.[[\f.[f [f [\z.z]]]]
             [h [\y.y]]]]];
 

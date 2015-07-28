@@ -16,6 +16,7 @@ stack* newStack( void );
 void deleteStack( stack* st );
 void push( stack* st, u32 val );
 u32 pop( stack* st );
+u32 top( stack* st );
 
 
 #endif //LNZ_STACK_H

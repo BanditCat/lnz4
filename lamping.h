@@ -48,6 +48,21 @@ u32 mallocLampingNode( LampingGraph* g );
 void freeLampingNode( LampingGraph* g, u32 node );
 
 
+
+typedef struct pathContexti{
+  int dir;
+  struct pathContexti* next;
+  struct pathContexti* closures;
+} pathContext;
+
+// Traverses the graph in normal order. func is called with the graph, the index,
+// the node in the graph we came from, an
+// opaque data pointer and the path context. This is a top down traversal. If func
+// returns non zero, this function stops.
+void traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext** pc,
+		    int (*func)( LampingGraph* g, u32 i, u32 f, void* d, 
+				 pathContext ** ) );
+
 // Creates a graph from a tree.
 LampingGraph* makeGraph( LNZprogram* p, u32 ind );
 // Creates a tree from a graph, the nametable is empty except for e which is
@@ -64,3 +79,7 @@ void repoint( LampingGraph* g, u32 ind, u32 whch, u32 new );
 
 int rulesSweep( LampingGraph* g, u32* ind, u32* rule );
 int traceRulesSweep( LampingGraph* g );
+
+
+
+void validateGraph( LampingGraph* g );

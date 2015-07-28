@@ -29,3 +29,6 @@ void push( stack* st, u32 val ){
 u32 pop( stack* st ){
   return st->stack[ --st->size ];
 }
+u32 top( stack* st ){
+  return st->stack[ st->size - 1 ];
+}

@@ -1,5 +1,46 @@
 
-lnz.h,597
+lamping.h,1162
+#define LAMPING_LAMBDA_TYPE 8,365
+#define LAMPING_APPLICATION_TYPE 10,443
+#define LAMPING_FREE_TYPE 12,543
+#define LAMPING_BRACKET_TYPE 15,601
+#define LAMPING_CONDITIONAL_BRACKET_TYPE 16,632
+#define LAMPING_RESTRICTED_BRACKET_TYPE 17,675
+#define LAMPING_ROOT_TYPE 20,739
+#define LAMPING_VOID_TYPE 21,767
+#define LAMPING_FAN_START 24,879
+  u32 type;28,928
+    u32 level;30,949
+    u32 arg;31,964
+  } la;32,977
+  u32 in;33,985
+  u32 out;34,995
+} LampingNode;35,1006
+  LampingNode* heap;39,1039
+  u32 heapsize;40,1060
+  u32 frees;41,1076
+  u32 root;42,1089
+} LampingGraph;43,1101
+LampingGraph* newLampingGraph(45,1118
+void deleteLampingGraph(46,1157
+u32 mallocLampingNode(47,1201
+void freeLampingNode(48,1243
+typedef struct pathContexti{pathContexti52,1297
+  int dir;53,1326
+  struct pathContexti* next;54,1337
+  struct pathContexti* closures;55,1366
+} pathContext;56,1399
+void traverseGraph(62,1664
+LampingGraph* makeGraph(67,1868
+LNZprogram* makeProgramFromGraph(70,2026
+void printLampingGraph(72,2080
+int ruleSweep(75,2214
+void repoint(78,2361
+int rulesSweep(80,2423
+int traceRulesSweep(81,2479
+void validateGraph(85,2522
+
+lnz.h,577
 #define LNZ_H8,279
 typedef unsigned char u8;18,421
 typedef unsigned short int u16;19,447
@@ -11,15 +52,14 @@ typedef signed int s32;24,595
 typedef signed long long int s64;25,619
 typedef float f32;26,653
 typedef double f64;27,672
-#define pi 58,1768
-void addStringToString(63,1947
-void LNZdie(65,2028
-void* LNZmalloc(68,2077
-void* LNZcalloc(69,2106
-void LNZfree(70,2135
-u8* LNZLoadResource(75,2383
-u8* LNZLoadResourceOrDie(76,2435
-u64 LNZmallocCount(81,2508
+void addStringToString(63,1949
+void LNZdie(65,2030
+void* LNZmalloc(68,2079
+void* LNZcalloc(69,2108
+void LNZfree(70,2137
+u8* LNZLoadResource(75,2385
+u8* LNZLoadResourceOrDie(76,2437
+u64 LNZmallocCount(81,2510
 
 nameTable.h,637
 #define LNZ_NAMETABLE_H6,268
@@ -54,51 +94,95 @@ int isName(20,707
 u32 parseExpression(24,876
 u64 parseLine(27,1044
 LNZprogram* parseProgram(30,1193
-void printExpression(33,1302
-void reduce(37,1452
+void printExpression(33,1324
+void reduce(38,1502
 
 pep.h,44
 static const char* pepTalks[pepTalks8,284
 
-program.h,1040
+program.h,1185
 #define LNZ_PROGRAM_H8,302
-#define LNZ_LAMBDA_TYPE 19,850
-#define LNZ_APPLICATION_TYPE 20,876
-#define LNZ_FREE_TYPE 21,907
-#define LNZ_STRING_TYPE 22,931
-#define LNZ_INT_TYPE 23,957
-#define LNZ_NEGATIVE_INT_TYPE 24,980
-#define LNZ_DATA_TYPE 25,1012
-#define LNZ_BUILTIN_START 26,1036
-  u32 type;28,1083
-  u32 references;29,1095
-  u64 data;30,1113
-} LNZnode;31,1125
-#define LNZ_INITIAL_HEAP_SIZE 36,1180
-  LNZnode* heap;39,1229
-  u32 heapsize;40,1246
-  u32 frees;41,1262
-  nameTable* names;42,1275
-  nameTable* pointers;43,1295
-  u64 global;44,1318
-} LNZprogram;45,1332
-LNZprogram* newProgram(48,1348
-void deleteProgram(49,1380
-u32 mallocNode(50,1417
-void freeNode(51,1450
-void addNamePointerPair(54,1545
-void popNamePointerPair(55,1629
-void multiplyNumberByInt(57,1672
-void addIntToNumber(58,1731
-u32 getPointerFromName(60,1786
-const u8* getNameFromPointer(61,1856
-void addStringChar(64,1996
-char* numberToString(67,2104
-LNZprogram* makeComputable(71,2359
-void printProgram(73,2421
-void printHeap(74,2463
+#define LNZ_LAMBDA_TYPE 18,849
+#define LNZ_APPLICATION_TYPE 19,875
+#define LNZ_FREE_TYPE 20,906
+#define LNZ_DATA_START 24,947
+#define LNZ_STRING_TYPE 25,972
+#define LNZ_INT_TYPE 26,998
+#define LNZ_NEGATIVE_INT_TYPE 27,1021
+#define LNZ_DATA_END 28,1053
+#define LNZ_DATA_TYPE 29,1076
+#define LNZ_BUILTIN_START 32,1102
+  u32 type;35,1150
+  u32 references;36,1162
+  u64 data;37,1180
+} LNZnode;38,1192
+#define LNZ_INITIAL_HEAP_SIZE 43,1247
+  LNZnode* heap;46,1297
+  u32 heapsize;47,1314
+  u32 frees;48,1330
+  nameTable* names;49,1343
+  nameTable* pointers;50,1363
+  u64 global;51,1386
+} LNZprogram;52,1400
+LNZprogram* newProgram(55,1416
+void deleteProgram(56,1448
+u32 mallocNode(57,1485
+void freeNode(58,1518
+void addNamePointerPair(61,1613
+void popNamePointerPair(62,1697
+void multiplyNumberByInt(64,1740
+void addIntToNumber(65,1799
+u32 getPointerFromName(67,1854
+const u8* getNameFromPointer(68,1930
+void addStringChar(71,2076
+char* numberToString(74,2184
+LNZprogram* makeComputable(78,2439
+void printProgram(81,2561
+void printHeap(83,2627
+int nodesEqual(86,2734
+u64 betaReduce(91,2886
+int betaReduceNormalOrder(93,2920
 
-stack.h,187
+rules.h,858
+int ruleOneA(8,327
+int ruleOneB(9,369
+int ruleTwoA(10,411
+int ruleTwoB(11,453
+int ruleTwoC(12,495
+int ruleThreeA(13,537
+int ruleThreeB(14,581
+int ruleFourA(15,625
+int ruleFourB(16,668
+int ruleFourC(17,711
+int ruleFourD(18,754
+int ruleFourE(19,797
+int ruleFiveAB(20,840
+int ruleSixA(21,884
+int ruleSixB(22,926
+int ruleSixCD(23,968
+int ruleSixEF(24,1011
+int ruleSevenA(25,1054
+int ruleSevenB(26,1098
+int ruleSevenC(27,1142
+int ruleSevenD(28,1186
+int ruleSevenE(29,1230
+int ruleSevenF(30,1274
+int ruleSevenG(31,1318
+int ruleSevenH(32,1362
+int ruleSevenI(33,1406
+int ruleSevenJ(34,1450
+int ruleSevenKL(35,1494
+int ruleSevenM(36,1539
+int ruleSevenN(37,1583
+int ruleEightA(40,1650
+int ruleEightBCD(41,1694
+int ruleEightE(42,1740
+int ruleEightF(43,1784
+int ruleEightGH(44,1828
+int ruleEightIJKLMN(45,1873
+int ruleEightO(46,1922
+
+stack.h,203
 #define LNZ_STACK_H6,264
   u64 size;10,321
   u64 bufsize;11,333
@@ -108,6 +192,48 @@ stack* newStack(15,372
 void deleteStack(16,397
 void push(17,428
 u32 pop(18,461
+u32 top(19,483
+
+lamping.c,1250
+u32 mallocLampingNode(9,344
+void freeLampingNode(27,914
+LampingGraph* newLampingGraph(33,1037
+void deleteLampingGraph(47,1447
+int equalsGraphTree(55,1677
+u32 copyTreeToGraph(89,3018
+void repoint(126,4494
+void fanin(153,5218
+int bracketFreeVars(211,6869
+int betterBracketFreeVars(245,8409
+void bracketFreeLambdas(302,10684
+void bracketFanin(337,11615
+void bracketFanins(365,12395
+LampingGraph* makeGraph(373,12567
+void printLampingGraph(399,13126
+int ruleSweep(441,15039
+const char* ruleNames[ruleNames493,15833
+int rulesSweep(534,16273
+int traceRulesSweep(547,16572
+pathContext* newPathContext(560,16813
+pathContext* copyPathContext(564,16923
+int equalsPathContext(577,17287
+int equalsPathContextExceptDir(585,17548
+void deletePathContext(591,17779
+void deletePathContextLevel(598,17963
+  stack* froms;608,18119
+  LNZprogram* p;609,18135
+} building;610,18152
+int buildProgram(612,18165
+  u32 lambda;699,20499
+  pathContext *comp;comp700,20513
+} tcheck;701,20534
+int innerTransparencyCheck(702,20544
+int transparencyCheck(717,20951
+void traverseGraph(734,21401
+u32 copyGraphToTree(859,24965
+LNZprogram* makeProgramFromGraph2(1004,29245
+LNZprogram* makeProgramFromGraph(1012,29540
+void validateGraph(1026,29986
 
 lnz.c,189
 static u64 lnzMallocCount 8,275
@@ -141,34 +267,85 @@ void LNZdie(13,354
 u8* LNZLoadResource(19,459
 u8* LNZLoadResourceOrDie(36,906
 
-parser.c,205
+parser.c,232
 int isWhitespace(8,279
 int isReserved(14,361
 int isName(20,451
 int isNumber(26,547
 u32 parseExpression(35,876
 u64 parseLine(306,7210
-LNZprogram* parseProgram(370,8606
-void printExpression(405,9426
+LNZprogram* parseProgram(387,8883
+u32 indexHelper(424,9796
+void printExpression(438,10192
 
-program.c,423
+program.c,690
 u32 mallocNode(8,263
-void freeNode(27,835
-LNZprogram* newProgram(33,950
-void deleteProgram(52,1469
-void addNamePointerPair(58,1611
-void popNamePointerPair(62,1815
-u32 getPointerFromName(66,1918
-const u8* getNameFromPointer(72,2121
-char* numberToString(79,2332
-void multiplyNumberByInt(109,3017
-void addStringChar(138,3934
-void printProgram(156,4493
-void printHeap(170,4871
-LNZprogram* makeComputable(181,5204
+void freeNode(26,817
+LNZprogram* newProgram(32,932
+void deleteProgram(50,1422
+void addNamePointerPair(56,1564
+void popNamePointerPair(60,1768
+u32 getPointerFromName(64,1871
+const u8* getNameFromPointer(70,2080
+char* numberToString(77,2297
+void multiplyNumberByInt(107,2982
+void addStringChar(136,3899
+void printProgram(154,4458
+void printHeap(168,4864
+u32 copyData(176,5191
+u32 copyExpression(212,6246
+void reLambda(310,9912
+void downLambda(327,10609
+void countRefs(351,11490
+LNZprogram* makeComputable(367,11922
+void decref(381,12418
+int dataEqual(418,13464
+int nodesEqual(457,14452
+u64 betaReduce(486,15531
+int betaReduceNormalOrder(508,16033
 
-stack.c,82
+rules.c,933
+int ruleOneA(10,389
+int ruleOneB(32,1067
+int ruleTwoA(60,1907
+int ruleTwoB(91,2819
+int ruleTwoC(119,3725
+int ruleThreeA(166,5004
+int ruleThreeB(177,5312
+int ruleFourA(197,5857
+int ruleFourB(223,6710
+int ruleFourC(249,7565
+int ruleFourD(275,8418
+int ruleFourE(301,9273
+int ruleFiveAB(340,10417
+int ruleSixA(388,11647
+int ruleSixB(418,12469
+int ruleSixCD(449,13361
+int ruleSixEF(482,14368
+int ruleSevenA(515,15388
+int ruleSevenB(532,15918
+int ruleSevenC(549,16430
+int ruleSevenD(566,16962
+int ruleSevenE(578,17330
+int ruleSevenF(592,17801
+int ruleSevenG(612,18485
+int ruleSevenH(625,18890
+int ruleSevenI(646,19629
+int ruleSevenJ(668,20334
+int ruleSevenKL(682,20819
+int ruleSevenM(703,21527
+int ruleSevenN(724,22197
+int ruleEightA(745,22871
+int ruleEightBCD(762,23377
+int ruleEightE(793,24293
+int ruleEightF(809,24746
+int ruleEightGH(825,25230
+int ruleEightIJKLMN(848,25808
+int ruleEightO(867,26352
+
+stack.c,98
 stack* newStack(7,262
 void deleteStack(14,412
 void push(19,487
 u32 pop(29,774
+u32 top(32,832
