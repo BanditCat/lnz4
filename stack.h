@@ -13,6 +13,8 @@ typedef struct{
 } stack;
 
 stack* newStack( void );
+stack* copyStack( const stack* c );
+int equalsStack( const stack* a, const stack* b );
 void deleteStack( stack* st );
 void push( stack* st, u32 val );
 u32 pop( stack* st );

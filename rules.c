@@ -92,7 +92,8 @@ int ruleTwoB( LampingGraph* g, u32 ind ){
   if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
     u32 rb = g->heap[ ind ].in;
     if( g->heap[ rb ].type == LAMPING_RESTRICTED_BRACKET_TYPE &&
-	g->heap[ rb ].in == ind ){
+	g->heap[ rb ].in == ind &&
+	g->heap[ rb ].la.level > 0 ){
       u32 va = g->heap[ rb ].out;
       u32 vb = g->heap[ ind ].out;
       u32 var = g->heap[ ind ].la.arg;

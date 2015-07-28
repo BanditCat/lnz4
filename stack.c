@@ -11,6 +11,24 @@ stack* newStack( void ){
   return ans;
 }
 
+stack* copyStack( const stack* c ){
+  stack* ans = LNZmalloc( sizeof( stack ) );
+  ans->bufsize = c->bufsize;
+  ans->size = c->size;
+  ans->stack = LNZmalloc( sizeof( u32 ) * c->bufsize );
+  for( u64 i = 0; i < ans->size; ++i )
+    ans->stack[ i ] = c->stack[ i ];
+  return ans;
+}
+
+int equalsStack( const stack* a, const stack* b ){
+  if( a->size != b->size )
+    return 0;
+  for( u64 i = 0; i < a->size; ++i )
+    if( a->stack[ i ] != b->stack[ i ] )
+      return 0;
+  return 1;
+}
 void deleteStack( stack* st ){
   LNZfree( st->stack );
   LNZfree( st );
@@ -27,8 +45,16 @@ void push( stack* st, u32 val ){
   st->stack[ st->size++ ] = val;
 }
 u32 pop( stack* st ){
+#ifdef DEBUG
+  if( !st->size )
+    LNZdie( "You can't pop an empty stack!" );
+#endif
   return st->stack[ --st->size ];
 }
 u32 top( stack* st ){
+#ifdef DEBUG
+  if( !st->size )
+    LNZdie( "You can't top an empty stack!" );
+#endif
   return st->stack[ st->size - 1 ];
 }

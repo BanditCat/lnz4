@@ -50,7 +50,7 @@ void freeLampingNode( LampingGraph* g, u32 node );
 
 
 typedef struct pathContexti{
-  int dir;
+  stack* dirs;
   struct pathContexti* next;
   struct pathContexti* closures;
 } pathContext;

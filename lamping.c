@@ -559,11 +559,12 @@ int traceRulesSweep( LampingGraph* g ){
 
 pathContext* newPathContext( void ){
   pathContext* ans = LNZcalloc( sizeof( pathContext ) );
+  ans->dirs = newStack();
   return ans;
 }
 pathContext* copyPathContext( const pathContext* cp ){
   pathContext* ans = LNZcalloc( sizeof( pathContext ) );
-  ans->dir = cp->dir;
+  ans->dirs = copyStack( cp->dirs );
   if( cp->next != NULL )
     ans->next = copyPathContext( cp->next );
   else
@@ -577,18 +578,13 @@ pathContext* copyPathContext( const pathContext* cp ){
 int equalsPathContext( const pathContext* a, const pathContext* b ){
   if( a == NULL || b == NULL )
     return a == b;
-  if( a->dir != b->dir )
+  if( !equalsStack( a->dirs, b->dirs  ) )
     return 0;
   return equalsPathContext( a->next, b->next ) &&
     equalsPathContext( a->closures, b->closures );
 }
-int equalsPathContextExceptDir( const pathContext* a, const pathContext* b ){
-  if( a == NULL || b == NULL )
-    return a == b;
-  return equalsPathContext( a->next, b->next ) &&
-    equalsPathContext( a->closures, b->closures );
-}
 void deletePathContext( pathContext* d ){
+  deleteStack( d->dirs );
   if( d->next != NULL )
     deletePathContext( d->next );
   if( d->closures != NULL )
@@ -696,6 +692,43 @@ int buildProgram( LampingGraph* g, u32 ind, u32 from, void* d,
 }
 
 typedef struct{
+  nameTable* lambdas;
+  pathContext *comp;
+} ncheck;
+int innerNestingCheck( LampingGraph* g, u32 ind, u32 from, void* data, 
+		       pathContext** pc ){
+  (void)from;
+  const ncheck* nc = (const ncheck*)data;
+  nameTable* nt = nc->lambdas;
+  if( g->heap[ ind ].type == LAMPING_FREE_TYPE &&
+      !getIndex( nt, (const u8*)( &( g->heap[ ind ].la.arg ) ), sizeof( u32 ) ) ){
+    if( equalsPathContext( *pc, nc->comp ) )
+      LNZdie( "Nesting property violated!" );
+    else
+      return 0;
+  }else if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){ 
+    addNameToTable( nt, (const u8*)( &ind ), sizeof( u32 ) );
+  }
+  return 0;
+}
+int nestingCheck( LampingGraph* g, u32 ind, u32 from, void* data, 
+		  pathContext** pc ){
+  (void)data;
+  if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
+    pathContext* pcc = copyPathContext( *pc );
+    pathContext* opc = copyPathContext( *pc );
+    nameTable* nt = newNameTable();
+    ncheck nc = { nt, pcc };
+    traverseGraph( g, ind, from, (void*)&nc, &opc, innerNestingCheck );
+    deleteNameTable( nt );
+    deletePathContext( pcc );
+    deletePathContext( opc );
+  }
+  return 0;
+}
+
+
+typedef struct{
   u32 lambda;
   pathContext *comp;
 } tcheck;
@@ -705,7 +738,7 @@ int innerTransparencyCheck( LampingGraph* g, u32 ind, u32 from, void* data,
   const tcheck* tc = (const tcheck*)data;
   if( g->heap[ ind ].type == LAMPING_FREE_TYPE &&
       g->heap[ ind ].la.arg == tc->lambda ){
-    if( equalsPathContextExceptDir( *pc, tc->comp ) )
+    if( equalsPathContext( *pc, tc->comp ) )
       return 0;
     else
       LNZdie( "Transparency property violated!" );
@@ -728,7 +761,51 @@ int transparencyCheck( LampingGraph* g, u32 ind, u32 from, void* data,
   return 0;
 }
 
+// returns 1 iff p is smaller than i
+int compareContexts( const pathContext* p, const pathContext* i ){
+  u32 pc = 0;
+  u32 ic = 0;
+  const pathContext* t = p;
+  while( t != NULL ){
+    ++pc;
+    t = t->closures;
+  }
+  t = i;
+  while( t != NULL ){
+    ++ic;
+    t = t->closures;
+  }
+  if( pc < ic )
+    return 1;
+  if( ic > pc )
+    return 0;
+  return p->dirs->size < i->dirs->size;
+}
 
+int innerIndependenceCheck( LampingGraph* g, u32 ind, u32 from, void* data, 
+		       pathContext** pc ){
+  (void)from;
+  (void)g;
+  (void)ind;
+  const pathContext* ic = (const pathContext*)data;
+  
+  if( compareContexts( *pc, ic ) )
+    LNZdie( "Independence check failed!" );
+  return 0;
+}
+
+int independenceCheck( LampingGraph* g, u32 ind, u32 from, void* data, 
+		       pathContext** pc ){
+  (void)data;
+  if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
+    pathContext* ic = copyPathContext( *pc );
+    pathContext* opc = copyPathContext( *pc );
+    traverseGraph( g, ind, from, (void*)ic, &opc, innerIndependenceCheck );
+    deletePathContext( ic );
+    deletePathContext( opc );
+  }
+  return 0;
+}
 
 
 void traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext** pc,
@@ -760,13 +837,14 @@ void traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext*
     }   
    
     if( from == g->heap[ ind ].in ){
-      w->dir = 1;
+      push( w->dirs, 1 );
       traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func );
     }else if( from == g->heap[ ind ].la.arg ){
-      w->dir = 0;
+      push( w->dirs, 0 );
       traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func );
     }else if( from == g->heap[ ind ].out ){
-      if( w->dir ){
+      u32 dir = pop( w->dirs );
+      if( dir ){
 	traverseGraph( g, g->heap[ ind ].in, ind, data, pc, func );  
       }else{
 	traverseGraph( g, g->heap[ ind ].la.arg, ind, data, pc, func );
@@ -801,7 +879,7 @@ void traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext*
 
     }else if( from == g->heap[ ind ].out ){
       *pcf = LNZmalloc( sizeof( pathContext ) );
-      (*pcf)->dir = 0;
+      (*pcf)->dirs = newStack();
       (*pcf)->next = w;
       (*pcf)->closures = NULL;
       os = g->heap[ ind ].in;
@@ -902,13 +980,14 @@ u32 copyGraphToTree( LNZprogram* p, const LampingGraph* g, u32 ind, u32 from,
     }
    
     if( from == g->heap[ ind ].in ){
-      w->dir = 1;
+      push( w->dirs, 1 );
       return copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc );
     }else if( from == g->heap[ ind ].la.arg ){
-      w->dir = 0;
+      push( w->dirs, 0 );
       return copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc );
     }else if( from == g->heap[ ind ].out ){
-      if( w->dir )
+      u32 dir = pop( w->dirs );
+      if( dir )
 	return copyGraphToTree( p, g, g->heap[ ind ].in, ind, pc );
       else
 	return copyGraphToTree( p, g, g->heap[ ind ].la.arg, ind, pc );
@@ -941,7 +1020,7 @@ u32 copyGraphToTree( LNZprogram* p, const LampingGraph* g, u32 ind, u32 from,
 
     }else if( from == g->heap[ ind ].out ){
       *pcf = LNZmalloc( sizeof( pathContext ) );
-      (*pcf)->dir = 0;
+      (*pcf)->dirs = newStack();
       (*pcf)->next = w;
       (*pcf)->closures = NULL;
       os = g->heap[ ind ].in;
@@ -1025,7 +1104,9 @@ LNZprogram* makeProgramFromGraph( LampingGraph* g ){
 }
 void validateGraph( LampingGraph* g ){
   pathContext* pc = newPathContext();
-  traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, transparencyCheck );
+  traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, nestingCheck );
+  //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, independenceCheck );
+  //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, transparencyCheck );
   deletePathContext( pc );
   for( u64 i = 0; i < g->heapsize; ++i ){
     if( ( g->heap[ i ].type >= LAMPING_FAN_START ||

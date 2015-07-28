@@ -49,10 +49,12 @@ inc = [\x.[\y. [[\f.[[\h.[h [\p.[h[\q.q]]]]]]
       	            [\l.[[[f [\n. [l n]]] x] y]]]]
 	       [\g. [\u. \v.[[g u] [g v]]]]]];
 
+inc2 = [\f.[\x.[[\g.[g [g x]]] [\y.[f y]]]]];
+inc6 = incnr nil [cons true nil];
 
-inc2 = incnr nil [cons true nil];
+inc1 = \x.x;
 
-inc1 = [[\g.[g [g [\x.x]]]]
+inc0 = [[\g.[g [g [\x.x]]]]
        [\h.[[\f.[f [f [\z.z]]]]
             [h [\y.y]]]]];
 
@@ -60,3 +62,4 @@ inc4 = \x.[x [\y.[\z.x] [\z.x]]];
 inc3 = \x.[x [\y.x x]];
 
 inc5 = \x y z.[x x] [y z];
+inc7 = \x y z.x [y z];
