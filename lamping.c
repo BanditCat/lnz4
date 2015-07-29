@@ -551,14 +551,26 @@ int rulesSweep( LampingGraph* g, u32* ind, u32* rule ){
   return 0;
 }
 int traceRulesSweep( LampingGraph* g ){
-  u32 w, r;
+  u32 w, r; 
+  int gc = 0;
+  for( u64 i = 0; i < g->heapsize; ++i ){
+    if( g->heap[ i ].type == LAMPING_VOID_TYPE ){
+      if( applyRules( g, i, &r ) ){
+	printf( "\nApplied rule %s at %u\n", ruleNames[ r ], (unsigned int)i );
+	gc = 1;
+	break;
+      }
+    }     
+  }
   if( rulesSweepNormalOrder( g, &w, &r ) ){
     printf( "\nApplied rule %s at %u\n", ruleNames[ r ], w );
     return 1;
   }else{
-    printf( "\nNo more simplifications.\n" );
-    return 0;
+    if( !gc )
+      printf( "\nNo more simplifications.\n" );
+    return gc;
   }
+  
 }
 
   
@@ -740,7 +752,7 @@ typedef struct{
   pathContext *comp;
 } tcheck;
 int innerTransparencyCheck( LampingGraph* g, u32 ind, u32 from, void* data, 
-		       pathContext** pc ){
+			    pathContext** pc ){
   (void)from;
   const tcheck* tc = (const tcheck*)data;
   if( g->heap[ ind ].type == LAMPING_FREE_TYPE &&
@@ -790,7 +802,7 @@ int compareContexts( const pathContext* p, const pathContext* i ){
 }
 
 int innerIndependenceCheck( LampingGraph* g, u32 ind, u32 from, void* data, 
-		       pathContext** pc ){
+			    pathContext** pc ){
   (void)from;
   (void)g;
   (void)ind;
@@ -1137,18 +1149,18 @@ LNZprogram* makeProgramFromGraph( LampingGraph* g ){
   return ans;
 }
 
-// BUGBUG fixme
-void validateGraph( LampingGraph* g ){
-  pathContext* pc = newPathContext();
-  //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, nestingCheck );
-  //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, independenceCheck );
-  //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, transparencyCheck );
-  deletePathContext( pc );
-  (void)g;
-  /* for( u64 i = 0; i < g->heapsize; ++i ){ */
-  /*   if( ( g->heap[ i ].type >= LAMPING_FAN_START || */
-  /* 	  g->heap[ i ].type == LAMPING_APPLICATION_TYPE ) && */
-  /* 	g->heap[ i ].la.arg == g->heap[ i ].in ) */
-  /*     LNZdie( "Edge case detected!!!" ); */
-  /* } */
-}
+/* // BUGBUG fixme */
+/* void validateGraph( LampingGraph* g ){ */
+/*   pathContext* pc = newPathContext(); */
+/*   //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, nestingCheck ); */
+/*   //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, independenceCheck ); */
+/*   traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, transparencyCheck ); */
+/*   deletePathContext( pc ); */
+/*   (void)g; */
+/*   /\* for( u64 i = 0; i < g->heapsize; ++i ){ *\/ */
+/*   /\*   if( ( g->heap[ i ].type >= LAMPING_FAN_START || *\/ */
+/*   /\* 	  g->heap[ i ].type == LAMPING_APPLICATION_TYPE ) && *\/ */
+/*   /\* 	g->heap[ i ].la.arg == g->heap[ i ].in ) *\/ */
+/*   /\*     LNZdie( "Edge case detected!!!" ); *\/ */
+/*   /\* } *\/ */
+/* } */

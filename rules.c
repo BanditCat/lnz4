@@ -827,7 +827,8 @@ int ruleEightGH( LampingGraph* g, u32 ind ){
   if( g->heap[ ind ].type == LAMPING_VOID_TYPE ){
     u32 f = g->heap[ ind ].out;
     if( g->heap[ f ].type >= LAMPING_FAN_START &&
-	g->heap[ f ].out != ind ){
+	g->heap[ f ].out != ind &&
+	g->heap[ f ].la.level == 0 ){
       u32 va;
       if( g->heap[ f ].in == ind )
 	va = g->heap[ f ].la.arg;

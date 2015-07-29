@@ -79,7 +79,7 @@ int main( int argc, char** argv ){
   if( prog != NULL ){
      LampingGraph* lg = makeGraph( prog, getPointerFromName( prog, eval, strlen( (const char*)eval ) ) ); 
      printLampingGraph( lg );
-     validateGraph( lg );
+     //validateGraph( lg );
     
     /* { */
     /*   LNZprogram* tp = makeProgramFromGraph( lg ); */
@@ -379,6 +379,7 @@ int main( int argc, char** argv ){
     u32 c = 0;
     while( traceRulesSweep( lg ) ){
       printf( "\n%u\n", c++ );
+      //validateGraph( lg );
     }
       tp = makeProgramFromGraph( lg );
       printProgram( tp, prog );
@@ -388,7 +389,7 @@ int main( int argc, char** argv ){
       /* if( c > 82  ) */
       /* 	break; */
       // printLampingGraph( lg );
-      validateGraph( lg );
+      //validateGraph( lg );
     
 
    
