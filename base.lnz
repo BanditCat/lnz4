@@ -8,6 +8,7 @@ two = \f x.f [f x];
 three = \f x.f [f [f x]];
 four = \f x.f [f [f [f x]]];
 
+churchPower = \x y.[\z.x y z];
 
 
 aNumber = \x.100000000000000000000000000000000000000000000000000000000000000000000000000000000 '12345678901234567890123456789012345678901234567890';
@@ -45,16 +46,14 @@ incnr = \incnr x.if [isnil x]
 incr = Yp incnr;
 
 
-inc = [\x.[\y. [[\f.[[\h.[h [\p.[h[\q.q]]]]]]
+inc0 = [\x.[\y. [[\f.[[\h.[h [\p.[h[\q.p]]]]]]
       	            [\l.[[[f [\n. [l n]]] x] y]]]]
 	       [\g. [\u. \v.[[g u] [g v]]]]]];
 
 inc2 = [\f.[\x.[[\g.[g [g x]]] [\y.[f y]]]]];
-inc6 = incnr nil [cons true nil];
+inc = [churchPower two two] incr nil;
 
-inc1 = \x.x;
-
-inc0 = [[\g.[g [g [\x.x]]]]
+inc6 = [[\g.[g [g [\x.x]]]]
        [\h.[[\f.[f [f [\z.z]]]]
             [h [\y.y]]]]];
 

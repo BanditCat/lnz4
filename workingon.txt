@@ -1,1 +1,1 @@
-Dude! A pathContext needs to be a stack, not just a direction!!!
+Memory leaks and property checking.

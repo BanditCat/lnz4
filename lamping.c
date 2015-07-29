@@ -530,23 +530,29 @@ const char* ruleNames[] = {
   "VIII.ijklmn",
   "VIII.o"
 };
+int applyRules( LampingGraph* g, u32 ind, u32* rule ){
+  for( u64 j = 0; j < ( sizeof( rules ) / sizeof( rules[ 0 ] ) ); ++j )
+    if( (rules[ j ])( g, ind ) ){
+      *rule = j;
+      return 1;
+    }
+  return 0;
+}
 
 int rulesSweep( LampingGraph* g, u32* ind, u32* rule ){
   for( u64 i = 0; i < g->heapsize; ++i ){
     if( g->heap[ i ].type ){
-      for( u64 j = 0; j < ( sizeof( rules ) / sizeof( rules[ 0 ] ) ); ++j )
-	if( (rules[ j ])( g, i ) ){
-	  *rule = j;
-	  *ind = i;
-	  return 1;
-	}
+      if( applyRules( g, i, rule ) ){
+	*ind = i;
+	return 1;
+      }
     }
   }
   return 0;
 }
 int traceRulesSweep( LampingGraph* g ){
   u32 w, r;
-  if( rulesSweep( g, &w, &r ) ){
+  if( rulesSweepNormalOrder( g, &w, &r ) ){
     printf( "\nApplied rule %s at %u\n", ruleNames[ r ], w );
     return 1;
   }else{
@@ -593,7 +599,8 @@ void deletePathContext( pathContext* d ){
 }
 void deletePathContextLevel( pathContext* d ){
   if( d->closures != NULL )
-    deletePathContextLevel( d->closures );
+    deletePathContext( d->closures );
+  deleteStack( d->dirs );
   LNZfree( d );
 }
 
@@ -806,26 +813,56 @@ int independenceCheck( LampingGraph* g, u32 ind, u32 from, void* data,
   }
   return 0;
 }
+typedef struct{
+  u32 ind;
+  u32 rule;
+} rsno;
 
+int rulesSweepNormalOrderFunc( LampingGraph* g, u32 ind, u32 from, void* data,
+			       pathContext** pc ){
+  (void)from;
+  (void)pc;
+  rsno* r = (rsno*)data;
+  if( applyRules( g, ind, &( r->rule ) ) ){
+    r->ind = ind;
+    return 1;
+  }
+  return 0;
+}
 
-void traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext** pc,
+int rulesSweepNormalOrder( LampingGraph* g, u32* ind, u32* rule ){
+  rsno r = { g->root, 0 };
+  pathContext* pc = newPathContext();
+  traverseGraph( g, g->heap[ g->root ].out, g->root, (void*)&r, &pc, 
+		 rulesSweepNormalOrderFunc );
+  deletePathContext( pc );
+  *ind = r.ind;
+  *rule = r.rule;	
+  if( r.ind == g->root )
+    return 0;
+  else
+    return 1;
+}
+
+int traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext** pc,
 		   int (*func)( LampingGraph* g, u32 i, u32 f, void* d, pathContext ** ) ){
   if( func( g, ind, from, data, pc ) )
-    return;
+    return 1;
   if( g->heap[ ind ].type == LAMPING_ROOT_TYPE ){
-    traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func );
-    return;
+    return traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func );
   }else if( g->heap[ ind ].type == LAMPING_APPLICATION_TYPE ){
-    pathContext* opc = copyPathContext( *pc );
-    traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func );
-    traverseGraph( g, g->heap[ ind ].la.arg, ind, data, &opc, func );
+    pathContext* opc = copyPathContext( *pc );    
+    if( traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func ) ){
+      deletePathContext( opc );
+      return 1;
+    }
+    int v = traverseGraph( g, g->heap[ ind ].la.arg, ind, data, &opc, func );
     deletePathContext( opc );
-    return;
+    return v;
   }else if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
-    traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func );
-    return;
+    return traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func );
   }else if( g->heap[ ind ].type == LAMPING_FREE_TYPE ){
-    return;
+    return 0;
   }else if( g->heap[ ind ].type >= LAMPING_FAN_START ){
     u32 lvl = g->heap[ ind ].type - LAMPING_FAN_START;
     pathContext* w = *pc;
@@ -835,23 +872,23 @@ void traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext*
       else
 	LNZdie( "What?" );
     }   
-   
+    int v;
     if( from == g->heap[ ind ].in ){
       push( w->dirs, 1 );
-      traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func );
+      v = traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func );
     }else if( from == g->heap[ ind ].la.arg ){
       push( w->dirs, 0 );
-      traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func );
+      v = traverseGraph( g, g->heap[ ind ].out, ind, data, pc, func );
     }else if( from == g->heap[ ind ].out ){
       u32 dir = pop( w->dirs );
       if( dir ){
-	traverseGraph( g, g->heap[ ind ].in, ind, data, pc, func );  
+	v = traverseGraph( g, g->heap[ ind ].in, ind, data, pc, func );  
       }else{
-	traverseGraph( g, g->heap[ ind ].la.arg, ind, data, pc, func );
+	v = traverseGraph( g, g->heap[ ind ].la.arg, ind, data, pc, func );
       }
     }else
       LNZdie( "Why?" );
-    return;
+    return v;
   }else if( g->heap[ ind ].type == LAMPING_BRACKET_TYPE ||
 	    g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE ){
     u32 lvl = g->heap[ ind ].la.arg;
@@ -872,9 +909,7 @@ void traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext*
 	LNZdie( "Not possible!" );
 #endif
       *pcf = w->next;
-      if( w->closures != NULL )
-	deletePathContext( w->closures );
-      LNZfree( w );
+      deletePathContextLevel( w );
       os = g->heap[ ind ].out;
 
     }else if( from == g->heap[ ind ].out ){
@@ -886,8 +921,7 @@ void traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext*
 
     }else
       LNZdie( "How?" );
-    traverseGraph( g, os, ind, data, pc, func );
-    return;
+    return traverseGraph( g, os, ind, data, pc, func );
   }else if( g->heap[ ind ].type == LAMPING_CONDITIONAL_BRACKET_TYPE ){
     u32 lvl = g->heap[ ind ].la.arg;
     pathContext* w = *pc;
@@ -928,172 +962,172 @@ void traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext*
       
     }else
       LNZdie( "How2?" );
-    traverseGraph( g, os, ind, data, pc, func ); 
-    return;
-  }
-
-  LNZdie( "Can't get here!" );
-}
-u32 copyGraphToTree( LNZprogram* p, const LampingGraph* g, u32 ind, u32 from,
-		     pathContext** pc ){
-  if( g->heap[ ind ].type == LAMPING_ROOT_TYPE )
-    return copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc );
-  else if( g->heap[ ind ].type == LAMPING_APPLICATION_TYPE ){
-    pathContext* npc = copyPathContext( *pc );
-    u32 nn = mallocNode( p );
-    p->heap[ nn ].type = LNZ_APPLICATION_TYPE;
-    u64 lo = copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc );
-    u64 hi = copyGraphToTree( p, g, g->heap[ ind ].la.arg, ind, &npc );
-    deletePathContext( npc );
-    hi <<= 32;
-    p->heap[ nn ].data = lo + hi;
-    p->heap[ nn ].references = 1;
-    return nn;
-  }else if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
-    u32 nn = mallocNode( p );
-    p->heap[ nn ].type = LNZ_LAMBDA_TYPE;
-    p->heap[ nn ].references = 1;
-    addNamePointerPair( p, (const u8*)( &ind ), sizeof( u32 ), nn );
-    u32 ans = copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc );
-    popNamePointerPair( p );
-    p->heap[ nn ].data = ans;
-    return nn;
-  }else if( g->heap[ ind ].type == LAMPING_FREE_TYPE ){
-    u32 nn = mallocNode( p );
-    p->heap[ nn ].type = LNZ_FREE_TYPE;
-    p->heap[ nn ].references = 1;
-    u32 nm = getIndex( p->names, (const u8*)( &( g->heap[ ind ].la.arg ) ),
-		       sizeof( u32 ) );
-    if( nm )
-      p->heap[ nn ].data = *( (const u32*)( p->pointers->revdict[ nm - 1 ] ) );
-    else
-      LNZdie( "Huh?" );
-    return nn;
-  }else if( g->heap[ ind ].type >= LAMPING_FAN_START ){
-    u32 lvl = g->heap[ ind ].type - LAMPING_FAN_START;
-    pathContext* w = *pc;
-    while( lvl-- ){
-      if( w->next != NULL )
-	w = w->next;
-      else
-	LNZdie( "What?" );
-    }
-   
-    if( from == g->heap[ ind ].in ){
-      push( w->dirs, 1 );
-      return copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc );
-    }else if( from == g->heap[ ind ].la.arg ){
-      push( w->dirs, 0 );
-      return copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc );
-    }else if( from == g->heap[ ind ].out ){
-      u32 dir = pop( w->dirs );
-      if( dir )
-	return copyGraphToTree( p, g, g->heap[ ind ].in, ind, pc );
-      else
-	return copyGraphToTree( p, g, g->heap[ ind ].la.arg, ind, pc );
-    }else
-      LNZdie( "Why?" );
-  }else if( g->heap[ ind ].type == LAMPING_BRACKET_TYPE ||
-	    g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE ){
-    u32 lvl = g->heap[ ind ].la.arg;
-    pathContext* w = *pc;
-    pathContext** pcf = pc;
-    while( lvl-- ){
-      if( w->next != NULL ){
-	pcf = &( w->next );
-	w = w->next;
-      }else
-	LNZdie( "When?" );
-    }
-   
-    u32 os;
-    if( from == g->heap[ ind ].in ){
-#ifdef DEBUG
-      if( pcf == pc && w->next == NULL )
-	LNZdie( "Not possible!" );
-#endif
-      *pcf = w->next;
-      if( w->closures != NULL )
-	deletePathContext( w->closures );
-      LNZfree( w );
-      os = g->heap[ ind ].out;
-
-    }else if( from == g->heap[ ind ].out ){
-      *pcf = LNZmalloc( sizeof( pathContext ) );
-      (*pcf)->dirs = newStack();
-      (*pcf)->next = w;
-      (*pcf)->closures = NULL;
-      os = g->heap[ ind ].in;
-
-    }else
-      LNZdie( "How?" );
-    return copyGraphToTree( p, g, os, ind, pc );
-  }else if( g->heap[ ind ].type == LAMPING_CONDITIONAL_BRACKET_TYPE ){
-    u32 lvl = g->heap[ ind ].la.arg;
-    pathContext* w = *pc;
-    pathContext** pcf = pc;
-    while( lvl-- ){
-      if( w->next != NULL ){
-	pcf = &( w->next );
-	w = w->next;
-      }else
-	LNZdie( "When?" );
-    }
-   
-    u32 os;
-    if( from == g->heap[ ind ].in ){
-#ifdef DEBUG
-      if( pcf == pc && w->next == NULL )
-	LNZdie( "Not possible2!" );
-#endif
-      *pcf = w->next;
-      pathContext* o = (*pcf)->closures;
-      (*pcf)->closures = w;
-      w->next = w->closures;
-      w->closures = o;
- 
-      os = g->heap[ ind ].out;
-    }else if( from == g->heap[ ind ].out ){
-#ifdef DEBUG
-      if( w->closures == NULL )
-	LNZdie( "No closure!" );
-#endif
-      *pcf = w->closures;
-      pathContext* o = (*pcf)->closures;
-      (*pcf)->closures = (*pcf)->next;
-      (*pcf)->next = w;
-      w->closures = o;
-       
-      /* w->closures = NULL;     */
-      //(*pcf)->next = w;
-      //w->closures = w->closures->closures;
-      //(*pcf)->closures = NULL;
-      os = g->heap[ ind ].in;
-      
-    }else
-      LNZdie( "How2?" );
-    return copyGraphToTree( p, g, os, ind, pc );
+    return traverseGraph( g, os, ind, data, pc, func ); 
   }
 
   LNZdie( "Can't get here!" );
   return 0;
 }
+/* u32 copyGraphToTree( LNZprogram* p, const LampingGraph* g, u32 ind, u32 from, */
+/* 		     pathContext** pc ){ */
+/*   if( g->heap[ ind ].type == LAMPING_ROOT_TYPE ) */
+/*     return copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc ); */
+/*   else if( g->heap[ ind ].type == LAMPING_APPLICATION_TYPE ){ */
+/*     pathContext* npc = copyPathContext( *pc ); */
+/*     u32 nn = mallocNode( p ); */
+/*     p->heap[ nn ].type = LNZ_APPLICATION_TYPE; */
+/*     u64 lo = copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc ); */
+/*     u64 hi = copyGraphToTree( p, g, g->heap[ ind ].la.arg, ind, &npc ); */
+/*     deletePathContext( npc ); */
+/*     hi <<= 32; */
+/*     p->heap[ nn ].data = lo + hi; */
+/*     p->heap[ nn ].references = 1; */
+/*     return nn; */
+/*   }else if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){ */
+/*     u32 nn = mallocNode( p ); */
+/*     p->heap[ nn ].type = LNZ_LAMBDA_TYPE; */
+/*     p->heap[ nn ].references = 1; */
+/*     addNamePointerPair( p, (const u8*)( &ind ), sizeof( u32 ), nn ); */
+/*     u32 ans = copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc ); */
+/*     popNamePointerPair( p ); */
+/*     p->heap[ nn ].data = ans; */
+/*     return nn; */
+/*   }else if( g->heap[ ind ].type == LAMPING_FREE_TYPE ){ */
+/*     u32 nn = mallocNode( p ); */
+/*     p->heap[ nn ].type = LNZ_FREE_TYPE; */
+/*     p->heap[ nn ].references = 1; */
+/*     u32 nm = getIndex( p->names, (const u8*)( &( g->heap[ ind ].la.arg ) ), */
+/* 		       sizeof( u32 ) ); */
+/*     if( nm ) */
+/*       p->heap[ nn ].data = *( (const u32*)( p->pointers->revdict[ nm - 1 ] ) ); */
+/*     else */
+/*       LNZdie( "Huh?" ); */
+/*     return nn; */
+/*   }else if( g->heap[ ind ].type >= LAMPING_FAN_START ){ */
+/*     u32 lvl = g->heap[ ind ].type - LAMPING_FAN_START; */
+/*     pathContext* w = *pc; */
+/*     while( lvl-- ){ */
+/*       if( w->next != NULL ) */
+/* 	w = w->next; */
+/*       else */
+/* 	LNZdie( "What?" ); */
+/*     } */
+   
+/*     if( from == g->heap[ ind ].in ){ */
+/*       push( w->dirs, 1 ); */
+/*       return copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc ); */
+/*     }else if( from == g->heap[ ind ].la.arg ){ */
+/*       push( w->dirs, 0 ); */
+/*       return copyGraphToTree( p, g, g->heap[ ind ].out, ind, pc ); */
+/*     }else if( from == g->heap[ ind ].out ){ */
+/*       u32 dir = pop( w->dirs ); */
+/*       if( dir ) */
+/* 	return copyGraphToTree( p, g, g->heap[ ind ].in, ind, pc ); */
+/*       else */
+/* 	return copyGraphToTree( p, g, g->heap[ ind ].la.arg, ind, pc ); */
+/*     }else */
+/*       LNZdie( "Why?" ); */
+/*   }else if( g->heap[ ind ].type == LAMPING_BRACKET_TYPE || */
+/* 	    g->heap[ ind ].type == LAMPING_RESTRICTED_BRACKET_TYPE ){ */
+/*     u32 lvl = g->heap[ ind ].la.arg; */
+/*     pathContext* w = *pc; */
+/*     pathContext** pcf = pc; */
+/*     while( lvl-- ){ */
+/*       if( w->next != NULL ){ */
+/* 	pcf = &( w->next ); */
+/* 	w = w->next; */
+/*       }else */
+/* 	LNZdie( "When?" ); */
+/*     } */
+   
+/*     u32 os; */
+/*     if( from == g->heap[ ind ].in ){ */
+/* #ifdef DEBUG */
+/*       if( pcf == pc && w->next == NULL ) */
+/* 	LNZdie( "Not possible!" ); */
+/* #endif */
+/*       *pcf = w->next; */
+/*       if( w->closures != NULL ) */
+/* 	deletePathContext( w->closures ); */
+/*       LNZfree( w ); */
+/*       os = g->heap[ ind ].out; */
+
+/*     }else if( from == g->heap[ ind ].out ){ */
+/*       *pcf = LNZmalloc( sizeof( pathContext ) ); */
+/*       (*pcf)->dirs = newStack(); */
+/*       (*pcf)->next = w; */
+/*       (*pcf)->closures = NULL; */
+/*       os = g->heap[ ind ].in; */
+
+/*     }else */
+/*       LNZdie( "How?" ); */
+/*     return copyGraphToTree( p, g, os, ind, pc ); */
+/*   }else if( g->heap[ ind ].type == LAMPING_CONDITIONAL_BRACKET_TYPE ){ */
+/*     u32 lvl = g->heap[ ind ].la.arg; */
+/*     pathContext* w = *pc; */
+/*     pathContext** pcf = pc; */
+/*     while( lvl-- ){ */
+/*       if( w->next != NULL ){ */
+/* 	pcf = &( w->next ); */
+/* 	w = w->next; */
+/*       }else */
+/* 	LNZdie( "When?" ); */
+/*     } */
+   
+/*     u32 os; */
+/*     if( from == g->heap[ ind ].in ){ */
+/* #ifdef DEBUG */
+/*       if( pcf == pc && w->next == NULL ) */
+/* 	LNZdie( "Not possible2!" ); */
+/* #endif */
+/*       *pcf = w->next; */
+/*       pathContext* o = (*pcf)->closures; */
+/*       (*pcf)->closures = w; */
+/*       w->next = w->closures; */
+/*       w->closures = o; */
+ 
+/*       os = g->heap[ ind ].out; */
+/*     }else if( from == g->heap[ ind ].out ){ */
+/* #ifdef DEBUG */
+/*       if( w->closures == NULL ) */
+/* 	LNZdie( "No closure!" ); */
+/* #endif */
+/*       *pcf = w->closures; */
+/*       pathContext* o = (*pcf)->closures; */
+/*       (*pcf)->closures = (*pcf)->next; */
+/*       (*pcf)->next = w; */
+/*       w->closures = o; */
+       
+/*       /\* w->closures = NULL;     *\/ */
+/*       //(*pcf)->next = w; */
+/*       //w->closures = w->closures->closures; */
+/*       //(*pcf)->closures = NULL; */
+/*       os = g->heap[ ind ].in; */
+      
+/*     }else */
+/*       LNZdie( "How2?" ); */
+/*     return copyGraphToTree( p, g, os, ind, pc ); */
+/*   } */
+
+/*   LNZdie( "Can't get here!" ); */
+/*   return 0; */
+/* } */
 
 
-LNZprogram* makeProgramFromGraph2( LampingGraph* g ){
-  LNZprogram* ans = newProgram();
-  pathContext* pc = newPathContext();
-  u32 e = copyGraphToTree( ans, g, g->heap[ g->root ].out, g->root, &pc );
-  addNamePointerPair( ans, (const u8*)"e", 1, e );
-  deletePathContext( pc );
-  return ans;
-}
+/* /\* LNZprogram* makeProgramFromGraph2( LampingGraph* g ){ *\/ */
+/* /\*   LNZprogram* ans = newProgram(); *\/ */
+/* /\*   pathContext* pc = newPathContext(); *\/ */
+/* /\*   u32 e = copyGraphToTree( ans, g, g->heap[ g->root ].out, g->root, &pc ); *\/ */
+/* /\*   addNamePointerPair( ans, (const u8*)"e", 1, e ); *\/ */
+/* /\*   deletePathContext( pc ); *\/ */
+/* /\*   return ans; *\/ */
+/* /\* } *\/ */
 LNZprogram* makeProgramFromGraph( LampingGraph* g ){
   LNZprogram* ans = newProgram();
   pathContext* pc = newPathContext();
   stack* st = newStack();
   building b = { st, ans };
-  traverseGraph( g, g->heap[ g->root ].out, g->root, 
+  traverseGraph( g, g->heap[ g->root ].out, g->root,
 		 (void*)( &b ), &pc, buildProgram );
   while( ans->names->size )
     popNamePointerPair( ans );
@@ -1102,16 +1136,19 @@ LNZprogram* makeProgramFromGraph( LampingGraph* g ){
   deleteStack( st );
   return ans;
 }
+
+// BUGBUG fixme
 void validateGraph( LampingGraph* g ){
   pathContext* pc = newPathContext();
-  traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, nestingCheck );
+  //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, nestingCheck );
   //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, independenceCheck );
   //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, transparencyCheck );
   deletePathContext( pc );
-  for( u64 i = 0; i < g->heapsize; ++i ){
-    if( ( g->heap[ i ].type >= LAMPING_FAN_START ||
-	  g->heap[ i ].type == LAMPING_APPLICATION_TYPE ) &&
-	g->heap[ i ].la.arg == g->heap[ i ].in )
-      LNZdie( "Edge case detected!!!" );
-  }
+  (void)g;
+  /* for( u64 i = 0; i < g->heapsize; ++i ){ */
+  /*   if( ( g->heap[ i ].type >= LAMPING_FAN_START || */
+  /* 	  g->heap[ i ].type == LAMPING_APPLICATION_TYPE ) && */
+  /* 	g->heap[ i ].la.arg == g->heap[ i ].in ) */
+  /*     LNZdie( "Edge case detected!!!" ); */
+  /* } */
 }

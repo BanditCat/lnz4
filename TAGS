@@ -1,5 +1,5 @@
 
-lamping.h,1162
+lamping.h,1201
 #define LAMPING_LAMBDA_TYPE 8,365
 #define LAMPING_APPLICATION_TYPE 10,443
 #define LAMPING_FREE_TYPE 12,543
@@ -26,19 +26,20 @@ void deleteLampingGraph(46,1157
 u32 mallocLampingNode(47,1201
 void freeLampingNode(48,1243
 typedef struct pathContexti{pathContexti52,1297
-  int dir;53,1326
-  struct pathContexti* next;54,1337
-  struct pathContexti* closures;55,1366
-} pathContext;56,1399
-void traverseGraph(62,1664
-LampingGraph* makeGraph(67,1868
-LNZprogram* makeProgramFromGraph(70,2026
-void printLampingGraph(72,2080
-int ruleSweep(75,2214
-void repoint(78,2361
-int rulesSweep(80,2423
-int traceRulesSweep(81,2479
-void validateGraph(85,2522
+  stack* dirs;53,1326
+  struct pathContexti* next;54,1341
+  struct pathContexti* closures;55,1370
+} pathContext;56,1403
+void traverseGraph(62,1668
+LampingGraph* makeGraph(67,1872
+LNZprogram* makeProgramFromGraph(70,2030
+void printLampingGraph(72,2084
+int ruleSweep(75,2218
+void repoint(78,2365
+int rulesSweep(80,2427
+int rulesSweepNormalOrder(81,2483
+int traceRulesSweep(82,2550
+void validateGraph(86,2593
 
 lnz.h,577
 #define LNZ_H8,279
@@ -182,19 +183,21 @@ int ruleEightGH(44,1828
 int ruleEightIJKLMN(45,1873
 int ruleEightO(46,1922
 
-stack.h,203
+stack.h,252
 #define LNZ_STACK_H6,264
   u64 size;10,321
   u64 bufsize;11,333
   u32* stack;12,348
 } stack;13,362
 stack* newStack(15,372
-void deleteStack(16,397
-void push(17,428
-u32 pop(18,461
-u32 top(19,483
+stack* copyStack(16,397
+int equalsStack(17,433
+void deleteStack(18,484
+void push(19,515
+u32 pop(20,548
+u32 top(21,570
 
-lamping.c,1250
+lamping.c,1624
 u32 mallocLampingNode(9,344
 void freeLampingNode(27,914
 LampingGraph* newLampingGraph(33,1037
@@ -212,28 +215,41 @@ LampingGraph* makeGraph(373,12567
 void printLampingGraph(399,13126
 int ruleSweep(441,15039
 const char* ruleNames[ruleNames493,15833
-int rulesSweep(534,16273
-int traceRulesSweep(547,16572
-pathContext* newPathContext(560,16813
-pathContext* copyPathContext(564,16923
-int equalsPathContext(577,17287
-int equalsPathContextExceptDir(585,17548
-void deletePathContext(591,17779
-void deletePathContextLevel(598,17963
-  stack* froms;608,18119
-  LNZprogram* p;609,18135
-} building;610,18152
-int buildProgram(612,18165
-  u32 lambda;699,20499
-  pathContext *comp;comp700,20513
-} tcheck;701,20534
-int innerTransparencyCheck(702,20544
-int transparencyCheck(717,20951
-void traverseGraph(734,21401
-u32 copyGraphToTree(859,24965
-LNZprogram* makeProgramFromGraph2(1004,29245
-LNZprogram* makeProgramFromGraph(1012,29540
-void validateGraph(1026,29986
+int applyRules(533,16272
+int rulesSweep(542,16487
+int traceRulesSweep(553,16706
+pathContext* newPathContext(566,16947
+pathContext* copyPathContext(571,17083
+int equalsPathContext(584,17462
+void deletePathContext(592,17740
+void deletePathContextLevel(600,17950
+  stack* froms;610,18106
+  LNZprogram* p;611,18122
+} building;612,18139
+int buildProgram(614,18152
+  nameTable* lambdas;701,20486
+  pathContext *comp;comp702,20508
+} ncheck;703,20529
+int innerNestingCheck(704,20539
+int nestingCheck(720,21115
+  u32 lambda;738,21626
+  pathContext *comp;comp739,21640
+} tcheck;740,21661
+int innerTransparencyCheck(741,21671
+int transparencyCheck(756,22069
+int compareContexts(771,22553
+int innerIndependenceCheck(791,22902
+int independenceCheck(803,23195
+  u32 ind;816,23624
+  u32 rule;817,23635
+} rsno;818,23647
+int rulesSweepNormalOrderFunc(820,23656
+int rulesSweepNormalOrder(832,23911
+void traverseGraph(846,24270
+u32 copyGraphToTree(972,27889
+LNZprogram* makeProgramFromGraph2(1118,32224
+LNZprogram* makeProgramFromGraph(1126,32519
+void validateGraph(1140,32965
 
 lnz.c,189
 static u64 lnzMallocCount 8,275
@@ -309,43 +325,45 @@ int ruleOneA(10,389
 int ruleOneB(32,1067
 int ruleTwoA(60,1907
 int ruleTwoB(91,2819
-int ruleTwoC(119,3725
-int ruleThreeA(166,5004
-int ruleThreeB(177,5312
-int ruleFourA(197,5857
-int ruleFourB(223,6710
-int ruleFourC(249,7565
-int ruleFourD(275,8418
-int ruleFourE(301,9273
-int ruleFiveAB(340,10417
-int ruleSixA(388,11647
-int ruleSixB(418,12469
-int ruleSixCD(449,13361
-int ruleSixEF(482,14368
-int ruleSevenA(515,15388
-int ruleSevenB(532,15918
-int ruleSevenC(549,16430
-int ruleSevenD(566,16962
-int ruleSevenE(578,17330
-int ruleSevenF(592,17801
-int ruleSevenG(612,18485
-int ruleSevenH(625,18890
-int ruleSevenI(646,19629
-int ruleSevenJ(668,20334
-int ruleSevenKL(682,20819
-int ruleSevenM(703,21527
-int ruleSevenN(724,22197
-int ruleEightA(745,22871
-int ruleEightBCD(762,23377
-int ruleEightE(793,24293
-int ruleEightF(809,24746
-int ruleEightGH(825,25230
-int ruleEightIJKLMN(848,25808
-int ruleEightO(867,26352
+int ruleTwoC(120,3756
+int ruleThreeA(167,5035
+int ruleThreeB(178,5343
+int ruleFourA(198,5888
+int ruleFourB(224,6741
+int ruleFourC(250,7596
+int ruleFourD(276,8449
+int ruleFourE(302,9304
+int ruleFiveAB(341,10448
+int ruleSixA(389,11678
+int ruleSixB(419,12500
+int ruleSixCD(450,13392
+int ruleSixEF(483,14399
+int ruleSevenA(516,15419
+int ruleSevenB(533,15949
+int ruleSevenC(550,16461
+int ruleSevenD(567,16993
+int ruleSevenE(579,17361
+int ruleSevenF(593,17832
+int ruleSevenG(613,18516
+int ruleSevenH(626,18921
+int ruleSevenI(647,19660
+int ruleSevenJ(669,20365
+int ruleSevenKL(683,20850
+int ruleSevenM(704,21558
+int ruleSevenN(725,22228
+int ruleEightA(746,22902
+int ruleEightBCD(763,23408
+int ruleEightE(794,24324
+int ruleEightF(810,24777
+int ruleEightGH(826,25261
+int ruleEightIJKLMN(849,25839
+int ruleEightO(868,26383
 
-stack.c,98
+stack.c,149
 stack* newStack(7,262
-void deleteStack(14,412
-void push(19,487
-u32 pop(29,774
-u32 top(32,832
+stack* copyStack(14,412
+int equalsStack(24,694
+void deleteStack(32,894
+void push(37,969
+u32 pop(47,1256
+u32 top(54,1399

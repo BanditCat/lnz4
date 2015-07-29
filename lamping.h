@@ -58,8 +58,9 @@ typedef struct pathContexti{
 // Traverses the graph in normal order. func is called with the graph, the index,
 // the node in the graph we came from, an
 // opaque data pointer and the path context. This is a top down traversal. If func
-// returns non zero, this function stops.
-void traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext** pc,
+// returns non zero, this function stops. Returns 0 iff it traversed the whole tree
+// without stopping.
+int traverseGraph( LampingGraph* g, u32 ind, u32 from, void* data, pathContext** pc,
 		    int (*func)( LampingGraph* g, u32 i, u32 f, void* d, 
 				 pathContext ** ) );
 
@@ -78,6 +79,7 @@ int ruleSweep( LampingGraph* g, int (*rule)( LampingGraph*, u32 ), u32* ind );
 void repoint( LampingGraph* g, u32 ind, u32 whch, u32 new );
 
 int rulesSweep( LampingGraph* g, u32* ind, u32* rule );
+int rulesSweepNormalOrder( LampingGraph* g, u32* ind, u32* rule );
 int traceRulesSweep( LampingGraph* g );
 
 

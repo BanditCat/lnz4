@@ -77,16 +77,16 @@ int main( int argc, char** argv ){
     deleteProgram( eprog );
 
   if( prog != NULL ){
-    LampingGraph* lg = makeGraph( prog, getPointerFromName( prog, eval, strlen( (const char*)eval ) ) );
-printLampingGraph( lg );
-  validateGraph( lg );
+     LampingGraph* lg = makeGraph( prog, getPointerFromName( prog, eval, strlen( (const char*)eval ) ) ); 
+     printLampingGraph( lg );
+     validateGraph( lg );
     
-  /*   u32 w; */
-  /*   { */
-  /*     LNZprogram* tp = makeProgramFromGraph( lg ); */
-  /*     printProgram( tp, prog ); */
-  /*     deleteProgram( tp ); */
-  /*   } */
+    /* { */
+    /*   LNZprogram* tp = makeProgramFromGraph( lg ); */
+    /*   printProgram( tp, prog ); */
+    /*   deleteProgram( tp ); */
+    /* } */
+    //  u32 w;
   /*   if( !ruleSweep( lg, ruleOneA, &w ) ) */
   /*     LNZdie( "bloop" ); */
   /*   printf( "\nApplied rule I.a at %u\n", w ); */
@@ -372,20 +372,28 @@ printLampingGraph( lg );
 
 
 
-    printLampingGraph( lg );
+  printLampingGraph( lg );
+       LNZprogram* tp = makeProgramFromGraph( lg );
+      printProgram( tp, prog );
+      deleteProgram( tp );
     u32 c = 0;
     while( traceRulesSweep( lg ) ){
       printf( "\n%u\n", c++ );
-      //if( c > 95 && c < 100 )	
-	printLampingGraph( lg );
-      validateGraph( lg );
-      LNZprogram* tp = makeProgramFromGraph( lg );
+    }
+      tp = makeProgramFromGraph( lg );
       printProgram( tp, prog );
       deleteProgram( tp );
-    }
+    
+      //if( c > 95 && c < 100 )
+      /* if( c > 82  ) */
+      /* 	break; */
+      // printLampingGraph( lg );
+      validateGraph( lg );
+    
+
    
-    deleteLampingGraph( lg );
-  }
+     deleteLampingGraph( lg ); 
+   }
 
   if( prog != NULL )
     deleteProgram( prog );
