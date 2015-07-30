@@ -826,9 +826,8 @@ int ruleEightF( LampingGraph* g, u32 ind ){
 int ruleEightGH( LampingGraph* g, u32 ind ){
   if( g->heap[ ind ].type == LAMPING_VOID_TYPE ){
     u32 f = g->heap[ ind ].out;
-    if( g->heap[ f ].type >= LAMPING_FAN_START &&
-	g->heap[ f ].out != ind &&
-	g->heap[ f ].la.level == 0 ){
+    if( g->heap[ f ].type == LAMPING_FAN_START &&
+	g->heap[ f ].out != ind ){
       u32 va;
       if( g->heap[ f ].in == ind )
 	va = g->heap[ f ].la.arg;
@@ -869,7 +868,8 @@ int ruleEightIJKLMN( LampingGraph* g, u32 ind ){
 int ruleEightO( LampingGraph* g, u32 ind ){
   if( g->heap[ ind ].type == LAMPING_VOID_TYPE ){
     u32 v = g->heap[ ind ].out;
-    if( g->heap[ v ].type == LAMPING_VOID_TYPE ){
+    if( g->heap[ v ].type == LAMPING_VOID_TYPE &&
+	g->heap[ v ].out == ind ){
       freeLampingNode( g, v );
       freeLampingNode( g, ind );
       return 1;

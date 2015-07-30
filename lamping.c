@@ -710,6 +710,28 @@ int buildProgram( LampingGraph* g, u32 ind, u32 from, void* d,
   return 0;
 }
 
+
+// returns 1 iff p is smaller than i
+int compareContexts( const pathContext* p, const pathContext* i ){
+  u32 pc = 0;
+  u32 ic = 0;
+  const pathContext* t = p;
+  while( t != NULL ){
+    ++pc;
+    t = t->next;
+  }
+  t = i;
+  while( t != NULL ){
+    ++ic;
+    t = t->next;
+  }
+  if( pc < ic )
+    return 1;
+  if( ic > pc )
+    return 0;
+  return 0;
+}
+
 typedef struct{
   nameTable* lambdas;
   pathContext *comp;
@@ -721,7 +743,7 @@ int innerNestingCheck( LampingGraph* g, u32 ind, u32 from, void* data,
   nameTable* nt = nc->lambdas;
   if( g->heap[ ind ].type == LAMPING_FREE_TYPE &&
       !getIndex( nt, (const u8*)( &( g->heap[ ind ].la.arg ) ), sizeof( u32 ) ) ){
-    if( equalsPathContext( *pc, nc->comp ) )
+    if( !compareContexts( *pc, nc->comp ) )
       LNZdie( "Nesting property violated!" );
     else
       return 0;
@@ -780,51 +802,7 @@ int transparencyCheck( LampingGraph* g, u32 ind, u32 from, void* data,
   return 0;
 }
 
-// returns 1 iff p is smaller than i
-int compareContexts( const pathContext* p, const pathContext* i ){
-  u32 pc = 0;
-  u32 ic = 0;
-  const pathContext* t = p;
-  while( t != NULL ){
-    ++pc;
-    t = t->closures;
-  }
-  t = i;
-  while( t != NULL ){
-    ++ic;
-    t = t->closures;
-  }
-  if( pc < ic )
-    return 1;
-  if( ic > pc )
-    return 0;
-  return p->dirs->size < i->dirs->size;
-}
 
-int innerIndependenceCheck( LampingGraph* g, u32 ind, u32 from, void* data, 
-			    pathContext** pc ){
-  (void)from;
-  (void)g;
-  (void)ind;
-  const pathContext* ic = (const pathContext*)data;
-  
-  if( compareContexts( *pc, ic ) )
-    LNZdie( "Independence check failed!" );
-  return 0;
-}
-
-int independenceCheck( LampingGraph* g, u32 ind, u32 from, void* data, 
-		       pathContext** pc ){
-  (void)data;
-  if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
-    pathContext* ic = copyPathContext( *pc );
-    pathContext* opc = copyPathContext( *pc );
-    traverseGraph( g, ind, from, (void*)ic, &opc, innerIndependenceCheck );
-    deletePathContext( ic );
-    deletePathContext( opc );
-  }
-  return 0;
-}
 typedef struct{
   u32 ind;
   u32 rule;
@@ -1149,18 +1127,17 @@ LNZprogram* makeProgramFromGraph( LampingGraph* g ){
   return ans;
 }
 
-/* // BUGBUG fixme */
-/* void validateGraph( LampingGraph* g ){ */
-/*   pathContext* pc = newPathContext(); */
-/*   //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, nestingCheck ); */
-/*   //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, independenceCheck ); */
-/*   traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, transparencyCheck ); */
-/*   deletePathContext( pc ); */
-/*   (void)g; */
-/*   /\* for( u64 i = 0; i < g->heapsize; ++i ){ *\/ */
-/*   /\*   if( ( g->heap[ i ].type >= LAMPING_FAN_START || *\/ */
-/*   /\* 	  g->heap[ i ].type == LAMPING_APPLICATION_TYPE ) && *\/ */
-/*   /\* 	g->heap[ i ].la.arg == g->heap[ i ].in ) *\/ */
-/*   /\*     LNZdie( "Edge case detected!!!" ); *\/ */
-/*   /\* } *\/ */
-/* } */
+void validateGraph( LampingGraph* g ){
+  pathContext* pc = newPathContext();
+  traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, nestingCheck );
+  traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, transparencyCheck );
+  //traverseGraph( g, g->heap[ g->root ].out, g->root, NULL, &pc, independenceCheck );
+  deletePathContext( pc );
+  (void)g;
+  for( u64 i = 0; i < g->heapsize; ++i ){
+    if( ( g->heap[ i ].type >= LAMPING_FAN_START ||
+  	  g->heap[ i ].type == LAMPING_APPLICATION_TYPE ) &&
+  	g->heap[ i ].la.arg == g->heap[ i ].in )
+      LNZdie( "Edge case detected!!!" );
+  }
+}
