@@ -318,7 +318,7 @@ void bracketFreeLambdas( LampingGraph* g ){
       }
       while( nt->size )
 	popNameTable( nt );
-      if( betterBracketFreeVars( g, i, i, nt ) ){
+      if( bracketFreeVars( g, i, nt ) ){
 	u32 t = g->heap[ i ].in;
 	u32 nn = mallocLampingNode( g ); 
 	g->heap[ nn ].type = LAMPING_RESTRICTED_BRACKET_TYPE;
@@ -562,7 +562,7 @@ int traceRulesSweep( LampingGraph* g ){
       }
     }     
   }
-  if( rulesSweepNormalOrder( g, &w, &r ) ){
+  if( rulesSweepNormalOrder( g, &w, &r ) || rulesSweep( g, &w, &r ) ){
     printf( "\nApplied rule %s at %u\n", ruleNames[ r ], w );
     return 1;
   }else{
@@ -733,6 +733,7 @@ int compareContexts( const pathContext* p, const pathContext* i ){
 }
 
 typedef struct{
+  u32 l;
   nameTable* lambdas;
   pathContext *comp;
 } ncheck;
@@ -741,6 +742,8 @@ int innerNestingCheck( LampingGraph* g, u32 ind, u32 from, void* data,
   (void)from;
   const ncheck* nc = (const ncheck*)data;
   nameTable* nt = nc->lambdas;
+  if( ind == nc->l )
+    return 1;
   if( g->heap[ ind ].type == LAMPING_FREE_TYPE &&
       !getIndex( nt, (const u8*)( &( g->heap[ ind ].la.arg ) ), sizeof( u32 ) ) ){
     if( !compareContexts( *pc, nc->comp ) )
@@ -755,12 +758,14 @@ int innerNestingCheck( LampingGraph* g, u32 ind, u32 from, void* data,
 int nestingCheck( LampingGraph* g, u32 ind, u32 from, void* data, 
 		  pathContext** pc ){
   (void)data;
+  (void)from;
   if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
     pathContext* pcc = copyPathContext( *pc );
     pathContext* opc = copyPathContext( *pc );
     nameTable* nt = newNameTable();
-    ncheck nc = { nt, pcc };
-    traverseGraph( g, ind, from, (void*)&nc, &opc, innerNestingCheck );
+    addNameToTable( nt, (const u8*)( &ind ), sizeof( u32 ) );
+    ncheck nc = { ind, nt, pcc };
+    traverseGraph( g, g->heap[ ind ].out, ind, (void*)&nc, &opc, innerNestingCheck );
     deleteNameTable( nt );
     deletePathContext( pcc );
     deletePathContext( opc );
@@ -777,6 +782,8 @@ int innerTransparencyCheck( LampingGraph* g, u32 ind, u32 from, void* data,
 			    pathContext** pc ){
   (void)from;
   const tcheck* tc = (const tcheck*)data;
+  if( ind == tc->lambda )
+    return 1;
   if( g->heap[ ind ].type == LAMPING_FREE_TYPE &&
       g->heap[ ind ].la.arg == tc->lambda ){
     if( equalsPathContext( *pc, tc->comp ) )
@@ -791,11 +798,13 @@ int innerTransparencyCheck( LampingGraph* g, u32 ind, u32 from, void* data,
 int transparencyCheck( LampingGraph* g, u32 ind, u32 from, void* data, 
 		       pathContext** pc ){
   (void)data;
+  (void)from;
   if( g->heap[ ind ].type == LAMPING_LAMBDA_TYPE ){
     pathContext* pcc = copyPathContext( *pc );
     pathContext* opc = copyPathContext( *pc );
     tcheck tc = { ind, pcc };
-    traverseGraph( g, ind, from, (void*)&tc, &opc, innerTransparencyCheck );
+    traverseGraph( g, g->heap[ ind ].out, ind, 
+		   (void*)&tc, &opc, innerTransparencyCheck );
     deletePathContext( pcc );
     deletePathContext( opc );
   }

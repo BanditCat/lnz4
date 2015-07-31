@@ -126,7 +126,7 @@ int ruleTwoC( LampingGraph* g, u32 ind ){
       u32 vb = g->heap[ fi ].la.arg;
       u32 vc = g->heap[ ind ].out;
       u32 var = g->heap[ ind ].la.arg;
-      
+  
       u32 nl = mallocLampingNode( g );
       u32 nv = mallocLampingNode( g );
       u32 nfo = mallocLampingNode( g );

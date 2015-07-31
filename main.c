@@ -381,11 +381,12 @@ int main( int argc, char** argv ){
       printf( "\n%u\n", c++ );
       printLampingGraph( lg );
       validateGraph( lg );
-    }
+   
       tp = makeProgramFromGraph( lg );
       printProgram( tp, prog );
       deleteProgram( tp );
-      printLampingGraph( lg );
+    }   
+   printLampingGraph( lg );
       //if( c > 95 && c < 100 )
       /* if( c > 82  ) */
       /* 	break; */
